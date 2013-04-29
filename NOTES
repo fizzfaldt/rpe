@@ -1,0 +1,138 @@
+Acknowledgements
+    Rezaul Chowdhury <Rezaul.Chowdhury@stonybrook.edu>
+    Jesmin Jahan <shraban03@gmail.com>
+    Arun Rathakrishnan <rathakrishnanarun@gmail.com>
+    Amitav Paul <paul.amitav@gmail.com>
+
+NonDeterminism
+    CORES
+        Cores can run at different speeds and/or start at slightly different times, different runs won't run exactly as fast
+    ORDER-D(CORES)
+        Because of CORES, order of "if d = infinity" changes so slight behavior difference
+    Race-Distance
+        BENIGN RACE on Distance array
+        Second, for efﬁcient implementation, PBFS contains a benign race condition, which can cause additional work to be generated nondeterministically
+            With locks ORDER-D still applies
+    Race-Owner
+        BENIGN RACE on Owner array
+    Reducer-Order
+        Nondeterministic reducers
+    WorkStealing
+        Requires a work-stealing scheduler
+
+Other Related Work
+    Distributed BFS
+        ?References?
+    Non-Level-Synchronous BFS
+        "MIT-BAG'="-ref3-ref42
+            [42] J. Ullman and M. Yannakakis. High-probability parallel transitive closure algorithms. In Proc. 2nd Ann. Symp. Paral- lel Algorithms and Architectures (SPAA-90), pages 200–209, New York, NY, USA, 1990. ACM Press.
+            $T_\infty = O(n^\epsilon)$ w.h.p.
+            Using $P=O(mn^{1-2\epsilon})$ processors, provided $m\geq n^{2-3\epsilon}
+
+            The key idea here is as follows. Instead of starting the search
+            from the source vertex s, we expand the frontier up to a
+            distance d in parallel from a set of randomly chosen distin-
+            guished vertices (that includes the source vertex s also) in
+            the graph. We then construct a new graph whose vertices
+            are the distinguished vertices, and we have edges between
+            these vertices if they were pair-wise reachable in the pre-
+            vious step. Now a set of superdistinguished vertices are
+            selected among them and the graph is explored to a depth
+            $t^2$. After this step, the resulting graph would be dense and
+            we can determine the shortest path of the source vertex s to
+            each of the vertices. Using this information, we can deter-
+            mine the shortest paths from s to all vertices.
+    Parallel Prefix Sum (Required, not related)
+
+
+Existing level-synchronous implementations (including 'reference')
+    "MIT-BAG"
+        A Work-Efﬁcient Parallel Breadth-First Search Algorithm (or How to Cope with the Nondeterminism of Reducers)
+            Uses penants, bags, splitting, and (reducer hyperobject to) union
+            Decent spatial locality
+            Nondeterminism:
+                CORES, ORDER-D, Race-Distance, Reducer-Order, WorkStealing
+            Asymptotic pfor log:
+                $T_\infty = O((V+E)/P + D\lg^3(V/D))$ w/High Probability
+                $T_1 = O(V+E)$ (worst case)
+                $W_P = O(V+E)$ (worst case)
+                Relies on CILK reducers, other model does not make sense.
+    "MIT-BAG"-ref3
+        A Scalable Distributed Parallel Breadth-First Search Algorithm
+            Uses special CRAY MTA-2 atomic instructions.
+            Each 64-bit word has a lock bit.
+            int_fetch_add() -- Atomic increment to enqueue in parallel
+            readfe() -- Atomic lock memory and read.  On failed lock, hardware pauses the thread and retries.  Note: hardware will run multiple threads and only pause the blocked ones.
+            writeef() -- Atomic write memory and unlock.
+            This is only fast because of special hardware.
+    "EVAL"
+        An Early Evaluation of the Scalability of Graph Algorithms on the Intel MIC Architecture
+        First to do simple double-parallel for
+        Proposes either locks, 
+    
+    TODO:"EVAL"[20]
+
+    OpenMP
+    "EVAL"-ref2  (OpenMP)
+    "EVAL"-ref3  (CilkPlus)
+
+    Do triple-nested-parallel-for
+        Nondeterministic, relies heavily on work stealing
+        Bad spatial locality
+    Parallel Prefix Sum
+    Lower bound for level synchronous in 'cilk' model (deterministic) - provide my algo (has same bounds)
+        W_p=T_1=T_s=\Theta(V+E)
+        T_p=\Theta((V+E)/P + D\log P)
+        Both achievable (with my algo)
+    Lower bound in 'const' model (randomized) - Provide super-simple algorithm
+        T_p=Theta((V+E)/P + D)
+        With optimal T_p, best known is
+        T_1=T_s=\Theta(V+E)
+        W_P=\Omega(V+E) *** Best known lower bound
+        W_p=O((V+E)/P + DP) *** Best known upper bound when T_p is optimal
+
+    HW1, HW2 implementations.. REFERENCES?
+
+FUTURE WORK/OPEN PROBLEMS
+    Get tighter bounds on W_P in const model (improve lower bound, upper bound, or both)
+    Update algorithm to remove false sharing
+        Can already do this for large levels, but not small levels.
+    Update algorithm to be clearer for determinism
+
+
+Other things I want in the story:
+    Why W_P is important?
+        Note: T_S <= T_1 <= W_P <= T_P*P
+        - Energy efficiency ([ref] race to idle)
+        - Scheduling: processors may become available to unrelated tasks
+        - Scheduling: Can reduce constant on T_p: processors may become available to related tasks (if P < P_{max})
+    Has anyone talked about W_P yet?
+        Lit Search?
+    Parallel Prefix Sum
+        References
+        See if anyone has done this one before.
+
+
+
+
+
+
+    Unlinked 25:
+        J. B. Lubos, L. Brim, and J. Chaloupka. Parallel breadth-first search LTL model-checking. In ASE, pages 106--115, 2003.
+    Unlinked 31:
+        Y. Zhang and E. A. Hansen. Parallel breadth-first heuristic search on a shared-memory architecture. In AAAI Workshop on Heuristic Search, Memory-Based Heuristics and Their Applications, 2006
+
+[3, 9, 21, 25, 31, 32].
+
+Other references
+    MIT-BAG:
+        MIT-BAG-1810534.bib
+    OriginalBFS: <BIBTEXIFY>
+        E. F. Moore. The shortest path through a maze. In <em>Int. Symp. on Th. of Switching</em>, pages 285--292, 1959.
+
+    OpenMP
+        http://openmp.org/wp/
+    Intel Cilk Plus
+        http://software.intel.com/en-us/intel-cilk-plus
+    "Cilk-Hyper-Objects" Includes reducers
+    
