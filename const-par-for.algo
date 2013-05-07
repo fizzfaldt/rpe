@@ -1,0 +1,63 @@
+Do per-list prefix sum.
+
+O(1) parallel time to find if any list has >= X degrees (can count input degrees instead of just output degrees) (uses race conditions to get one answer 
+Then in parallel find (arbitrary) list that has >= lg p degrees (input degrees also count)
+
+if at least one list had lg p degrees:
+    we can afford to finish the parallel prefix sum.
+    use 'old' algorithm
+else
+    0 <= max total degree < plgp
+    Now what?
+        Don't know how, but if we can determine the following:
+            total degree <= p
+                pfor each list
+                    pfor each vertex
+                        pfor each degree
+                two levels of parallel for
+            ;total degree 
+                
+        Ask Michael for help on a randomized algorithm here to determine if there are > p 
+
+
+    If (in parallel) at least one arbitrary list  listone exists:
+        do parallel prefix sum (either kind), we can afford it.
+        That processor finishes up the combined prefix sum
+
+        use previous algorithm
+    else:
+        Total degrees <= p^2-p
+
+in parallel, ask which queues have kprocessors have >= p degree
+
+
+If even (all of the indiviidual queue's portion of (m+n)/ps are \Theta of each other) and you know (m+n)/p = X
+
+___ASSUME___ everything is even (count input, not output)
+	So
+	each queue had (input) (m+n)/p = X
+		prefix sum for each queue is free
+		if X >= lg p, just do full prefix sum and normal algorithm
+		if X < 1 (ml+nl + ml' + nl` < p), 
+
+
+Then if X >= lg p
+	Do the full prefix sum
+	Consequence: even
+else
+	Do prefix sum for each sublist (even so free)
+	Now what?
+	X <= 1
+	even work and even queues:
+		pfor each list
+			pfor each vertex
+				pfor each degree, gets its own list?  HOW
+		
+	even work but not even queues:
+		pfor each list (1 out queue per list, will have holes but that's fine)
+			pfor each vertex
+				pfor each degree
+					if degree drops, put in 'hole' in spot.
+	
+If you KNOW (m+n)/p and they are even (all of the indiviidual queue's portion of (m+n)/ps are \Theta of each other)
+	
