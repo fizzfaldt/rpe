@@ -1,4 +1,10 @@
 \usepackage{color}
+
+\def\comment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
+\def\lcomment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
+\def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
+\def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
+
 \def\func#1#2{\mbox{\textrm{\bf{\sc{#1}}}}\ensuremath{(~{#2}~)}}
 \def\array#1#2{\mbox{\textrm{\bf{\sc{#1}}}}\ensuremath{[{#2}]}}
 \def\arraysize#1{\ensuremath{\size{\mbox{\textrm{\bf{\sc{#1}}}}}}}
@@ -13,6 +19,8 @@
 \newtheorem{proposition}[fact]{Proposition}
 \newtheorem{claim}[fact]{Claim}
 \newtheorem{exercise}[fact]{Exercise}
+
+\newcommand{\defn}[1]{#1}
 
 % math notations
 \newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
@@ -61,4 +69,28 @@
 \newcommand{\xtrue}{\mbox{\bf{\em{true}}}}
 \newcommand{\T}{\mbox{\hspace{0.5cm}}}
 \newcommand{\m}[1]{\ensuremath{\mathcal{#1}}}
+
+% name
+\newcommand{\codefigure}[3]{
+    \begin{figure*}[h!]
+    % \vspace{0.8cm}
+        \begin{minipage}{\textwidth}
+%            \begin{center}
+                \framebox{
+                    \begin{minipage}{\textwidth}
+                        {\footnotesize
+                            \medskip\noindent
+                            #1
+                        }
+                    \end{minipage}
+                }
+                \vspace{-0.3cm}
+                \caption{#2}
+                \label{fi:#3}
+                \vspace{-0.3cm}
+%            \end{center}
+        \end{minipage}
+    \end{figure*}
+}
+
 

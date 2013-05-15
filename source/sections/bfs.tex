@@ -7,159 +7,132 @@ parallel for u gets 0 .. n - 1
 
 \begin{verbatim}
 parallel for i = 0 to p-1
-    if i = 0
-        var{offset} = 0
-    else
-    var{offset} = D[\frac{iN}{p}
+if i = 0
+var{offset} = 0
+else
+var{offset} = D[\frac{iN}{p}
     var{offset}
 
 
-\end{verbatim}
+    \end{verbatim}
 
-\begin{figure*}[h!]
-% \vspace{0.8cm}
-    \begin{minipage}{\textwidth}
-        \begin{center}
-            \framebox{
-                \begin{minipage}{\textwidth}
-                    {\footnotesize
-                        \medskip\noindent$\func{Find-Sublist}{\var{Work}, ~W, ~p}$
+\codefigure{
+    $\func{Parallel-BFS}{V, ~\Gamma, ~\gamma, ~s, ~p_{max}}$
 
+    {\color{gray} ${V}[0:n-1]$ are the $n$ nodes in the graph.  $\Gamma[u]$ is the sequence of adjacent nodes to node $u$. $\gamma[u] = \size{\Gamma[u]}$.  $s$ is the source vertex from which distance is calculated.  $p_{max}$ is the maximum number of processors to use.  Returns $\array{Dist}{0:n-1}$ which represents the distance from $s$ to each vertex.}
+    \noindent
                         % TODO: comment?
-                        \noindent
+    \noindent
 
-                        \begin{enumerate}
-                            \item $p_n \gets \func{Min}{p, ~N}$
-                            \item $\var{Sublist} \gets \xarray[0:p-1]$
-                            \item $\var{RangesStart} \gets \xarray[0:p_n-1]$
-                            \item $\var{RangesEnd} \gets \xarray[0:p_n-1]$
-                            \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
-                            \item \T \xif $i = 0$ \xthen
-                            \item \T \T $\var{FirstDegree} \gets 0$
-                            \item \T \xelse
-                            \item \T \T $\var{FirstDegree} \gets \array{Work}{\floor{\frac{i N}{p_n}} - 1}$
-                            \item \T $\var{FirstDegreeNext} \gets \array{Work}{\floor{\frac{(i+1) N}{p_n}}-1}$
-                            \item \T $\array{RangesStart}{i} \gets \ceil{\frac{p_n \cdot \var{FirstDegree}}{W}}$
-                            \item \T $\array{RangesEnd}{i} \gets \ceil{\frac{p_n \cdot \var{FirstDegreeNext}}{W}}-1$
-                            \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
-                            \item \T \xif $\array{RangesStart}{i} \leq \array{RangesEnd}{i}$ \xthen
-                            \item \T \T \xparallel \xfor $j \gets \array{RangesStart}{i}$ \xto $\array{RangesEnd}{i}$ \xdo
-                            \item \T \T \T $\array{Sublist}{j} \gets i$
-                            \item \xreturn \var{Sublist}
-                        \end{enumerate}
-                    }
-                \end{minipage}
-            }
-            \framebox{
-                \begin{minipage}{\textwidth}
-                    {\footnotesize
-                        \medskip\noindent$\func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{D}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
+    \begin{enumerate}
+        \item \xparallel \xfor $u \gets 0$ \xto $n-1$ \xdo
+        \item \T $\array{Dist}{u} \gets \infty$
+        \item \T $\array{Owner}{u} \gets \infty$
+        \item $\array{Dist}{s} \gets 0$
+        \item $\array{Owner}{s} \gets 0$
+        \item \xif $\gamma[s] = 0$ \xthen
+        \item \T $\xreturn \var{Dist}$
+        \item $\var{Input} \gets \xarray[0:0]$
+        \item $\array{Input}{0} \gets s$
+        \item $\var{Level} \gets 0$
+        \item $p \gets 1$
+        \item \xwhile $\arraysize{Input} \neq 0$ \xdo
+        \item \T $\var{Level} \gets \var{Level} + 1$
+        \item \T $\var{N} \gets \arraysize{Input}$
+        \item \T $\var{Work} \gets \xarray[0:N-1]$
+        \item \T \xparallel \xfor $u \gets 0$ \xto $N-1$ \xdo
+        \item \T \T $\array{Work}{u} \gets \gamma[\array{Input}{u}]$
+            \comment{}
+        \item \T $\func{Parallel-Prefix-Sum}{\var{Work}, \floor{\frac{N}{p}}}$
+        \item \T $W \gets \array{Work}{N-1}$
+        \item \T $p \gets \func{Min}{p_{max}, ~W}$
 
-                        % TODO: comment?
-                        \noindent
+        \item \T $\var{Sublist} \gets \func{Find-Sublist}{\var{Work}, ~W, ~p}$
 
-                        \begin{enumerate}
-                            \item $\var{Q} \gets \xarray[0:p-1]$
-                            \item \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
-                            \item \T $\array{Q}{i}.\func{Clear}{}$
-                            \item \T $\var{FirstDegree} \gets \floor{\frac{iW}{p}}$
-                            \item \T $\var{WorkItems} \gets \floor{\frac{(i+1)W}{p}} - \var{FirstDegree}$
-                            \item \T $\var{Vertex} \gets \func{Binary-Search-For-Index}{\var{Work}, \floor{\frac{N\cdot\array{Sublist}{i}}{p}}, \floor{\frac{N\cdot(\array{Sublist}{i}+1)}{p}}, \var{FirstDegree}+1}$
-                            \item \T $\var{Degree} \gets \var{FirstDegree} - \array{Work}{\var{Vertex}-1}$
-                            \item \T \xwhile $\var{WorkItems} > 0$ \xdo
-                            \item \T \T $u \gets \array{Input}{\var{Vertex}}$
-                            \item \T \T $\var{Limit} \gets \func{Min}{\var{WorkItems} + \var{Degree}, ~\gamma[u]}$
-                            \item \T \T \xfor $j \gets \var{Degree}$ \xto $\var{Limit}$ \xdo
-                            \item \T \T \T $v \gets \Gamma[u][j]$
-                            \item \T \T \T \xif $\array{d}{v} = \infty$ \xthen
-                            \item \T \T \T \T $\array{d}{v} \gets \var{Level}$
-                            \item \T \T \T \T $\array{Owner}{v} \gets i$
-                            \item \T \T \T \T \xif $\gamma[v] > 0$ \xthen
-                            \item \T \T \T \T \T $\array{Q}{i}.\func{Enqueue}{v}$
-                            \item \T \T $\var{WorkItems} \gets \var{WorkItems} - \var{Degree}$
-                            \item \T \T $\var{Degree} \gets 0$
-                            \item \T \T $\var{Vertex} \gets \var{Vertex}+1$
-                            \item \xreturn \var{Q}
-                        \end{enumerate}
-                    }
-                \end{minipage}
-            }
-            \vspace{-0.3cm}
-            \caption{Overwrite squirrels with its prefix sum.}
-            \label{fi:bfs}
-            \vspace{-0.3cm}
-        \end{center}
-    \end{minipage}
-\end{figure*}
-
-\begin{figure*}[h!]
-% \vspace{0.8cm}
-    \begin{minipage}{\textwidth}
-        \begin{center}
-            \framebox{
-                \begin{minipage}{\textwidth}
-                    {\footnotesize
-                        \medskip\noindent$\func{Parallel-BFS}{V, ~\Gamma, ~\gamma, ~s, ~p_{max}}$
-
-                        {\color{gray} ${V}[0:n-1]$ are the $n$ nodes in the graph.  $\Gamma[u]$ is the sequence of adjacent nodes to node $u$. $\gamma[u] = \size{\Gamma[u]}$.  $s$ is the source vertex from which distance is calculated.  $p_{max}$ is the maximum number of processors to use.  Returns $\array{d}{0:n-1}$ which represents the distance from $s$ to each vertex.}
-                        \noindent
-                        % TODO: comment?
-                        \noindent
-
-                        \begin{enumerate}
-                            \item \xparallel \xfor $u \gets 0$ \xto $n-1$ \xdo
-                            \item \T $\array{d}{u} \gets \infty$
-                            \item \T $\array{Owner}{u} \gets \infty$
-                            \item $\array{d}{s} \gets 0$
-                            \item $\array{Owner}{s} \gets 0$
-                            \item \xif $\gamma[s] = 0$ \xthen
-                            \item \T $\xreturn \var{d}$
-                            \item $\var{Input} \gets \xarray[0:0]$
-                            \item $\array{Input}{0} \gets s$
-                            \item $\var{Level} \gets 0$
-                            \item $p \gets 1$
-                            \item \xwhile $\arraysize{Input} \neq 0$ \xdo
-                            \item \T $\var{Level} \gets \var{Level} + 1$
-                            \item \T $\var{N} \gets \arraysize{Input}$
-                            \item \T $\var{Work} \gets \xarray[0:N-1]$
-                            \item \T \xparallel \xfor $u \gets 0$ \xto $N-1$ \xdo
-                            \item \T \T $\array{Work}{u} \gets \gamma[\array{Input}{u}]$
-                            \item \T $\var{Grain-Size} \gets \frac{N}{p}$
-                            \item \T $\func{Parallel-Prefix-Sum}{\var{Work}, ~\var{Grain-Size}}$
-                            \item \T $W \gets \array{D}{N-1}$
-                            \item \T $p \gets \func{Min}{p_{max}, ~W}$
-
-                            \item \T $\var{Sublist} \gets \func{Find-Sublist}{\var{Work}, ~W, ~p}$
-
-                            \item \T $\var{Q} \gets \func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{D}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
+        \item \T $\var{Q} \gets \func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
                                 %TODO call here
-                            \item \T $\var{Sizes} \gets \xarray[0:p-1]$
-                            \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
-                            \item \T \T $\var{Q-New} \gets \xqueue$
-                            \item \T \T \T \xfor $v$ \xin $\array{Q}{i}$ \xdo
-                            \item \T \T \T \T \xif $\array{Owner}{v} = i$ \xthen
-                            \item \T \T \T \T \T $\var{Q-New}.\func{Enqueue}{v}$
-                            \item \T \T $\array{Q}{i} \gets \var{Q-New}$
-                            \item \T \T $\array{Sizes}{i} \gets \size{\array{Q}{i}}$
-                            \item \T $\func{Parallel-Prefix-Sum}{\var{Sizes}, 1}$
-                            \item \T $\var{Input} \gets \xarray[0:\array{Sizes}{p-1}]$
-                            \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
-                            \item \T \T \xif $i = 0$ \xthen
-                            \item \T \T \T $\var{Offset} \gets 0$
-                            \item \T \T \xelse
-                            \item \T \T \T $\var{Offset} \gets \array{Sizes}{i-1}$
-                            \item \T \T \xfor $j \gets \var{Offset}$ \xto $\var{Offset} + \size{\array{Q}{i}}$ \xdo
-                            \item \T \T \T $\array{Input}{\var{Offset}} \gets \array{Q}{i}.\func{Dequeue}{}$
-                        \end{enumerate}
-                    }
-                \end{minipage}
-            }
-            \vspace{-0.3cm}
-            \caption{Overwrite squirrels with its prefix sum.}
-            \label{fi:bfs}
-            \vspace{-0.3cm}
-        \end{center}
-    \end{minipage}
-\end{figure*}
+        \item \T $\var{Sizes} \gets \xarray[0:p-1]$
+        \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item \T \T $\var{Q-New} \gets \xqueue$
+        \item \T \T \T \xfor $v$ \xin $\array{Q}{i}$ \xdo
+        \item \T \T \T \T \xif $\array{Owner}{v} = i$ \xthen
+        \item \T \T \T \T \T $\var{Q-New}.\func{Enqueue}{v}$
+        \item \T \T $\array{Q}{i} \gets \var{Q-New}$
+        \item \T \T $\array{Sizes}{i} \gets \size{\array{Q}{i}}$
+        \item \T $\func{Parallel-Prefix-Sum}{\var{Sizes}, 1}$
+        \item \T $\var{Input} \gets \xarray[0:\array{Sizes}{p-1}]$
+        \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item \T \T \xif $i = 0$ \xthen
+        \item \T \T \T $\var{Offset} \gets 0$
+        \item \T \T \xelse
+        \item \T \T \T $\var{Offset} \gets \array{Sizes}{i-1}$
+        \item \T \T \xfor $j \gets \var{Offset}$ \xto $\var{Offset} + \size{\array{Q}{i}}$ \xdo
+        \item \T \T \T $\array{Input}{\var{Offset}} \gets \array{Q}{i}.\func{Dequeue}{}$
+    \end{enumerate}
+}{}{parallel-bfs}
+
+\codefigure{
+    $\func{Find-Sublist}{\var{Work}, ~W, ~p}$
+
+                        % TODO: comment?
+    \noindent
+
+    \begin{enumerate}
+        \item $N \gets \arraysize{Work}$
+        \item $p_n \gets \func{Min}{p, ~N}$
+        \item $\var{Sublist} \gets \xarray[0:p-1]$
+        \item $\var{RangesStart} \gets \xarray[0:p_n-1]$
+        \item $\var{RangesEnd} \gets \xarray[0:p_n-1]$
+        \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
+        \item \T \xif $i = 0$ \xthen
+        \item \T \T $\var{FirstDegree} \gets 0$
+        \item \T \xelse
+        \item \T \T $\var{FirstDegree} \gets \array{Work}{\floor{\frac{i N}{p_n}} - 1}$
+        \item \T $\var{FirstDegreeNext} \gets \array{Work}{\floor{\frac{(i+1) N}{p_n}}-1}$
+        \item \T $\array{RangesStart}{i} \gets \ceil{\frac{p \cdot \var{FirstDegree}}{W}}$
+        \item \T $\array{RangesEnd}{i} \gets \ceil{\frac{p \cdot \var{FirstDegreeNext}}{W}}-1$
+        \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
+        \item \T \xif $\array{RangesStart}{i} \leq \array{RangesEnd}{i}$ \xthen
+        \item \T \T \xparallel \xfor $j \gets \array{RangesStart}{i}$ \xto $\array{RangesEnd}{i}$ \xdo
+            \comment{Use cores $\array{RangesStart}{i}$ to $\array{RangesEnd}{i}$}
+        \item \T \T \T $\array{Sublist}{j} \gets i$
+        \item \xreturn \var{Sublist}
+    \end{enumerate}
+}{}{find-sublist}
+
+\codefigure{
+    $\func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
+
+                        % TODO: comment?
+    \noindent
+
+    \begin{enumerate}
+        \item $N \gets \arraysize{Work}$
+        \item $p_n \gets \func{Min}{p, ~N}$
+        \item $\var{Q} \gets \xarray[0:p-1]$
+        \item \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item \T $\array{Q}{i}.\func{Clear}{}$
+        \item \T $\var{FirstDegree} \gets \floor{\frac{iW}{p}}$
+        \item \T $\var{WorkItems} \gets \floor{\frac{(i+1)W}{p}} - \var{FirstDegree}$
+        \item \T $\var{Vertex} \gets \func{Binary-Search-For-Index}{\var{Work}, \floor{\frac{N\cdot\array{Sublist}{i}}{p_n}}, \floor{\frac{N\cdot(\array{Sublist}{i}+1)}{p_n}}, \var{FirstDegree}+1}$
+        \item \T $\var{Degree} \gets \var{FirstDegree} - \array{Work}{\var{Vertex}-1}$
+        \item \T \xwhile $\var{WorkItems} > 0$ \xdo
+        \item \T \T $u \gets \array{Input}{\var{Vertex}}$
+        \item \T \T $\var{Limit} \gets \func{Min}{\var{WorkItems} + \var{Degree}, ~\gamma[u]}$
+        \item \T \T \xfor $j \gets \var{Degree}$ \xto $\var{Limit}$ \xdo
+        \item \T \T \T $v \gets \Gamma[u][j]$
+        \item \T \T \T \xif $\array{Dist}{v} = \infty$ \xthen
+        \item \T \T \T \T $\array{Dist}{v} \gets \var{Level}$
+            \comment{Benign race condition.  All threads write the same value.}
+        \item \T \T \T \T $\array{Owner}{v} \gets i$
+            \comment{Benign race condition.  One thread's value will win.}
+        \item \T \T \T \T \xif $\gamma[v] > 0$ \xthen
+        \item \T \T \T \T \T $\array{Q}{i}.\func{Enqueue}{v}$
+        \item \T \T $\var{WorkItems} \gets \var{WorkItems} - \var{Degree}$
+        \item \T \T $\var{Degree} \gets 0$
+        \item \T \T $\var{Vertex} \gets \var{Vertex}+1$
+        \item \xreturn \var{Q}
+    \end{enumerate}
+}{}{level-to-queues}
 % no \IEEEPARstart
 

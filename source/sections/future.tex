@@ -1,1 +1,23 @@
 \section{Future Work}
+
+%TODO:
+TODO "WRITE" these instead of what we have now.
+\begin{verbatim}
+Add labels and links for each of these
+\end{verbatim}
+\begin{itemize}
+    \item Optimize for false sharing
+        \begin{itemize}
+            \item From parallel Prefix Sum <- pretty easy, just set appropriate GRAIN-Size and align properly.
+            \item For Dist array.
+                \begin{itemize}
+                    \item can use radix sort for large levels where num degrees $= \Omega(n^c)$
+                    \item Each proc can create an unsorted list of all cache lines its degrees touch, then each proc takes \#$cachelines /p$ cache lines
+                \end{itemize}
+            \item For find sublist
+       \end{itemize}
+   \item Optimize for cache-misses
+   \item Make processor-oblivious
+   \item Make cache-oblivious?  Is it already?
+   \item Optimize $T_p,T_1,W_p$ for PRAM model
+\end{itemize}

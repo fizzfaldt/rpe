@@ -1,3 +1,38 @@
 \section{Related Work}
 % no \IEEEPARstart
-\cite{mit-bag}
+
+\subsection{Terms}
+\begin{itemize}
+    \item $T_s$ is the running time for the most efficient serial algorithm.
+    \item $T_1 \equiv \var{Work}$ is the running time for a parallel algorithm running on one processing elements.
+    \item $T_p$ is the running time for a parallel algorithm running on $p$ processing elements.
+    \item $T_\infty \equiv \var{Span}$ is the critical path for a parallel algorithm or the time it takes given infinite processing elements.
+    \item $W_p \leq pT_p$ is the total amount of work for $p$ processing elements.  Idle processing elements do not count towards $W_p$.
+\end{itemize}
+
+
+\subsection{Level-Synchronous BFS Algorithms}
+One approach for BFS is to find all nodes at distance $0\leq d \leq \size{V}$ from the source before any nodes at distance $d^\prime > d$.
+
+The general approach for Level-Synchronous BFS can be seen in \ref{fig:general-bfs}.
+\codefigure{
+    $\func{Serial-BFS}{V, ~\Gamma, ~s}$
+
+    \begin{enumerate}
+        \item \xfor each vertex $u \in V$
+        \item \T $\array{Dist}{u} \gets \infty$
+        \item $\array{Dist}{s} \gets 0$
+        \item \xwhile $Q \neq \emptyset$ \xdo
+        \item \T $u \gets \func{Dequeue}{Q}$
+        \item \T \xfor each vertex $v \in \Gamma(u)$ \xdo
+        \item \T \T \xif $\array{Dist}{v} = \infty$ \xthen
+        \item \T \T \T $\array{Dist}{v} \gets \array{Dist}{u} + 1$
+        \item \T \T \T $\func{Enqueue}{Q, ~v}$
+    \end{enumerate}
+}{General approach for Level-Synchronous BFS}{general-bfs}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%BEGIN
+\cite{mit-bag} uses data structures called \defn{penants} and \defn{bags}
+
+\definition{soup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%END
