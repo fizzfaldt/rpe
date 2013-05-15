@@ -9,16 +9,16 @@ Parallel prefix sum
             \framebox{
                 \begin{minipage}{\textwidth}
                     {\footnotesize
-                        \medskip\noindent\func{Serial-Prefix-Sum}{\m{V}, ~start, ~limit}
+                        \medskip\noindent\func{Serial-Prefix-Sum}{V, ~start, ~limit}
                         \noindent
                         % TODO: comment?
                         \noindent
 
                         \begin{enumerate}
-                            \item $\m{V}[start] \gets \m{V}[start] + partial\_sum$
+                            \item $V[start] \gets V[start] + partial\_sum$
                             \item \xfor $i \gets start+1$ \xto $limit-1$ \xdo
-                            \item \T $\m{V}[i] \gets \m{V}[i] + \m{V}[i-1]$
-                            \item \xreturn $\m{V}[limit-1]$
+                            \item \T $V[i] \gets V[i] + V[i-1]$
+                            \item \xreturn $V[limit-1]$
                         \end{enumerate}
                     }
                 \end{minipage}
@@ -26,21 +26,21 @@ Parallel prefix sum
             \framebox{
                 \begin{minipage}{\textwidth}
                     {\footnotesize
-                        \medskip\noindent\func{Parallel-Prefix-Sum-Up}{\m{V}, ~start, ~limit}
+                        \medskip\noindent\func{Parallel-Prefix-Sum-Up}{V, ~\var{Grain-Size}, ~start, ~limit}
                         \noindent
                         % TODO: comment?
                         \noindent
 
                         \begin{enumerate}
                             \item $size \gets limit - start$
-                            \item \xif $size \leq \funcstyle{Grain-Size}$ \xthen
-                            \item \T \xreturn $\func{Serial-Prefix-Sum}{\m{V}, ~start, ~limit}$
+                            \item \xif $size \leq \var{Grain-Size}$ \xthen
+                            \item \T \xreturn $\func{Serial-Prefix-Sum}{V, ~start, ~limit}$
                             \item \xelse
                             \item \T $mid \gets \floor{\frac{start+limit}{2}}$
-                            \item \T $x \gets \xspawn \func{Parallel-Prefix-Sum-Up}{\m{V}, ~start, ~mid}$
-                            \item \T $y \gets \func{Parallel-Prefix-Sum-Up}{\m{V}, ~mid, ~limit}$
+                            \item \T $x \gets \xspawn \func{Parallel-Prefix-Sum-Up}{V, ~\var{Grain-Size}, ~start, ~mid}$
+                            \item \T $y \gets \func{Parallel-Prefix-Sum-Up}{V, ~\var{Grain-Size}, ~mid, ~limit}$
                             \item \T \xsync
-                            \item \T $\m{V}[limit-1] \gets x+y$
+                            \item \T $V[limit-1] \gets x+y$
                             \item \T \xreturn $x+y$
                         \end{enumerate}
                     }
@@ -49,16 +49,16 @@ Parallel prefix sum
             \framebox{
                 \begin{minipage}{\textwidth}
                     {\footnotesize
-                        \medskip\noindent\func{Serial-Prefix-Sum-Down}{\m{V}, ~start, ~limit, ~rightmost\_excluded, ~partial\_sum}
+                        \medskip\noindent\func{Serial-Prefix-Sum-Down}{V, ~start, ~limit, ~rightmost\_excluded, ~partial\_sum}
                         \noindent
                         % TODO: comment?
                         \noindent
 
                         \begin{enumerate}
                             \item \xfor $i \gets start$ \xto $limit-2$ \xdo
-                            \item \T $\m{V}[start] \gets \m{V}[start] + partial\_sum$
+                            \item \T $V[start] \gets V[start] + partial\_sum$
                             \item \xif $\neg rightmost\_excluded$ \xthen
-                            \item \T $\m{V}[limit-1] \gets \m{V}[limit-1] + partial\_sum$
+                            \item \T $V[limit-1] \gets V[limit-1] + partial\_sum$
                         \end{enumerate}
                     }
                 \end{minipage}
@@ -66,24 +66,24 @@ Parallel prefix sum
             \framebox{
                 \begin{minipage}{\textwidth}
                     {\footnotesize
-                        \medskip\noindent\func{Parallel-Prefix-Sum-Down}{\m{V}, ~start, ~limit, ~rightmost\_excluded, ~partial\_sum}
+                        \medskip\noindent\func{Parallel-Prefix-Sum-Down}{V, ~start, ~limit, ~rightmost\_excluded, ~partial\_sum}
                         \noindent
                         % TODO: comment?
                         \noindent
 
                         \begin{enumerate}
                             \item $size \gets limit - start$
-                            \item \xif $size \leq \funcstyle{Grain-Size}$ \xthen
-                            \item \T $\func{Serial-Prefix-Sum-Down}{\m{V}, ~start, ~limit, ~partial\_sum, ~rightmost\_excluded}$
+                            \item \xif $size \leq \var{Grain-Size}$ \xthen
+                            \item \T $\func{Serial-Prefix-Sum-Down}{V, ~start, ~limit, ~partial\_sum, ~rightmost\_excluded}$
                             \item \T \xreturn
                             \item \xelse
                             \item \T $mid \gets \floor{\frac{start+limit}{2}}$
-                            \item \T $sum\_left \gets \m{V}[mid-1]$
-                            \item \T \xspawn $\func{Parallel-Prefix-Sum-Down}{\m{V}, ~start, ~mid, ~\xfalse, ~partial\_sum}$
+                            \item \T $sum\_left \gets V[mid-1]$
+                            \item \T \xspawn $\func{Parallel-Prefix-Sum-Down}{V, ~\var{Grain-Size}, ~start, ~mid, ~\xfalse, ~partial\_sum}$
                             \item \T \xif $\neg rightmost\_excluded$ \xthen
-                            \item \T \T $\m{V}[limit-1] \gets \m{V}[limit-1] + partial\_sum$
+                            \item \T \T $V[limit-1] \gets V[limit-1] + partial\_sum$
                             \item \T \xif $limit - mid > 1$
-                            \item \T \T $\func{Parallel-Prefix-Sum-Down}{\m{V}, ~mid, ~limit, ~\xtrue, ~partial\_sum + sum\_left}$
+                            \item \T \T $\func{Parallel-Prefix-Sum-Down}{V, ~\var{Grain-Size}, ~mid, ~limit, ~\xtrue, ~partial\_sum + sum\_left}$
                         \end{enumerate}
                     }
                 \end{minipage}
@@ -91,23 +91,23 @@ Parallel prefix sum
             \framebox{
                 \begin{minipage}{\textwidth}
                     {\footnotesize
-                        \medskip\noindent\func{Parallel-Prefix-Sum}{\m{V}}
+                        \medskip\noindent\func{Parallel-Prefix-Sum}{V, ~\var{Grain-Size}}
                         %\vspace{0.1cm}
 
                         \noindent
                         % TODO: comment?
-                        {\color{gray} ${\m{V}}[0:n-1]$ is a sequence of $n$ integers.  This function replaces $\m{V}[i]$ with $\sum_{0\leq j \leq i}{\m{V}[j]}$}
+                        {\color{gray} ${V}[0:n-1]$ is a sequence of $n$ integers.  This function replaces $V[i]$ with $\sum_{0\leq j \leq i}{V[j]}$}
                         \noindent
                         \begin{enumerate}
-                            \item \xif $\size{\m{V}} > 1$ \xthen
-                            \item \T \func{Parallel-Prefix-Sum-Up}{\m{V}, ~0, ~n}
-                            \item \T \func{Parallel-Prefix-Sum-Down}{V, ~0, ~n, ~\xfalse, ~0}
+                            \item \xif $\size{V} > 1$ \xthen
+                            \item \T \func{Parallel-Prefix-Sum-Up}{V, ~\var{Grain-Size}, ~0, ~n}
+                            \item \T \func{Parallel-Prefix-Sum-Down}{V, ~\var{Grain-Size}, ~0, ~n, ~\xfalse, ~0}
                         \end{enumerate}
                     }
                 \end{minipage}
             }
             \vspace{-0.3cm}
-            \caption{Overwrite $\m{V}[0:n-1]$ with its prefix sum.}
+            \caption{Overwrite $V[0:n-1]$ with its prefix sum.}
             \label{fi:score-one-fold}
             \vspace{-0.3cm}
         \end{center}
