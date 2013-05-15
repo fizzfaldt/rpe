@@ -1,3 +1,4 @@
+.PHONY: bfs.pdf
 bfs.pdf: bfs.tex sections/*.tex
 	true && \
 	pdflatex $< && bibtex bfs && \
