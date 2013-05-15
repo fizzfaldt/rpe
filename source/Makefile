@@ -1,5 +1,8 @@
 bfs.pdf: bfs.tex sections/*.tex
-	pdflatex $< && pdflatex $<
+	true && \
+	pdflatex $< && bibtex bfs && \
+	pdflatex $< && bibtex bfs && \
+	pdflatex $<
 
 .PHONY: clean
 clean:
