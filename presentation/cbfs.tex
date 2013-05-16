@@ -64,29 +64,29 @@
         \item Given
             \begin{itemize}
                 \item Graph $G=(\V,\E)$
-                \item Distinguished source vertex $s \in \V$
+                \item Source vertex $s \in \V$
             \end{itemize}
         \item Calculate
             \begin{itemize}
                 \item $Dist_{u\in \V} =$ length of the shortest path from $s$ to $u$ in $G$
-                \item *$Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
+                \item $Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
             \end{itemize}
     \end{itemize}
 }
 
-\framedgraphic{BFS Example}{bfs-1.png}{0.6}
+\framedgraphic{BFS Example}{bfs-1.png}{1.0}
 
-\frame{\frametitle{Terms Used in this Presentation}
+\frame{\frametitle{Terminology}
     \begin{itemize}
         \item $n= \size{\V}$ the number of nodes in a graph \maybepause
         \item $m= \size{\E}$ the number of edges in a graph \maybepause
         \item $D= \Oh{n}$ the diameter of a graph \maybepause
-        \item $\Gamma_u$ the set of vertexes adjacent to $u$ \maybepause
-        \item $T_s$ the running time for a serial algorithm \maybepause
-        \item $T_P$ the running time for a parallel algorithm running on $P$ cores \maybepause
-        \item $T_\infty$ the running time for a parallel algorithm running on infinite cores
-        \item $T_1 = \Om{T_s}$ the running time for a parallel algorithm running on one core \maybepause
-        \item $W_P = \Om{T_s}$ the total work done by a parallel algorithm running on $P$ cores (excluding idle time)
+        \item $\Gamma_u =$ the set of vertexes adjacent to $u$ \maybepause
+        \item $T_s =$ the running time for a serial algorithm \maybepause
+        \item $T_P =$ the running time for a parallel algorithm running on $P$ cores \maybepause
+        \item $T_\infty =$ the running time for a parallel algorithm running on infinite cores
+        \item $T_1 = \Om{T_s} =$ the running time for a parallel algorithm running on one core \maybepause
+        \item $W_P = \Om{T_s} =$ the total work done by a parallel algorithm running on $P$ cores (excluding idle time)
             \begin{itemize}
                 \item Reducing $W_P$ can reduce energy use \cite{race-to-idle}
             \end{itemize}
@@ -110,11 +110,11 @@
     \end{enumerate}
 }
 
-\frame{\frametitle{Model of Computation}
+\frame{\frametitle{Computation Model}
     \begin{itemize}
         \item Large shared memory
         \item Consistent caches between cores
-        \item Synchronizing $x$ tasks takes $T_\infty=\Th{\log x}$ time
+        \item Synchronizing $y$ tasks takes $T_\infty=\Th{\log y}$ time
         \item Cilk has this model with randomized work stealing \cite{cilk}
     \end{itemize}
 }
@@ -141,24 +141,24 @@
 
 \frame{\frametitle{Existing Approaches for PBFS}
     \begin{itemize}
-        \item Assumes somewhat unrealistic PRAM model \maybepause
+        \item Assumes PRAM model \maybepause
         \item Specialized for specific hardware \cite{blue-bfs}
             \begin{itemize}
                 \item GPU
                 \item CRAY (hardware mutex every $64$ bits, atomic add) \maybepause
                     \cite{cray-bfs}
             \end{itemize}
-        \item Uses atomic instructions\cite{block-queue-bfs}
-        \item Specialized for sparse (dense) graphs only
-        \item Specialized for bounded out-degree  (Not scale-free) \cite{mit-bag} \maybepause
+        \item Uses atomic instructions \cite{block-queue-bfs}
+        \item Specialized for sparse (or dense) graphs only
+        \item Specialized for bounded out-degree (not scale-free) \cite{mit-bag} \maybepause
         \item $T_1$ or $T_p$ is not asymptotically optimal \maybepause
         \item Room for energy efficiency improvements (non-optimal $W_P$) \maybepause
         \item Offloads some work to scheduler
             \begin{itemize}
-                \item Work-stealing (randomized) gives at best high probability bounds
+                \item Work-stealing (randomized) gives high probability bounds
                     \cite{mit-bag}
             \end{itemize}
-        \item Non level-synchronous\cite{distinguished-bfs}
+        \item Non level-synchronous \cite{distinguished-bfs}
     \end{itemize}
 }
 
@@ -186,7 +186,7 @@
     \end{itemize}
 }
 
-\frame{\frametitle{Bottlenecks for Parallelizing BFS}
+\disableframe{\frametitle{Bottlenecks for Parallelizing BFS}
     \begin{itemize}
         \item FIFO
         \item $Dist$ array
@@ -196,35 +196,43 @@
 \section{Clean BFS}
 \frame{\frametitle{Clean BFS - Properties}
     \begin{itemize}
-        \item $T_s = \Oh{n+m}$
-        \item $T_1 = \Oh{n+m}$
-        \item $W_P = \Oh{n+m}$
-        \item $T_P = \Oh{n/p+m/p+D\log P}$
+        \item Recall $T_s = \Oh{n+m}$
+        \item $T_1 = \Oh{n+m}$ (optimal)
+        \item $W_P = \Oh{n+m}$ (optimal)
+        \item $T_P = \Oh{n/p+m/p+D\log P}$ (optimal)
         \item Scale-free
         \item Deterministic worst case bounds
     \end{itemize}
 }
 
-\frame{\frametitle{Clean BFS - Approach}
-    \begin{itemize}
-        \item Evenly split edges among cores using prefix sum and binary search
-        \item Combine output queues using prefix sum
-    \end{itemize}
-    %TODO improve this slide
+\frame{\frametitle{Clean BFS - High Level}
+    For each level $\ell \in [0\ldots D)$
+    \begin{enumerate}
+        \item To get optimal $T_1,T_P$
+        \begin{enumerate}
+            \item Prepare to Split Work
+            \item Split Work and Process Edges
+            \item Dedup Vertexes and Combine Queues
+        \end{enumerate}
+    \item To get optimal $W_P$
+        \begin{enumerate}
+            \item Reduce Search Space
+            \item Dynamically Choose Number of Cores
+        \end{enumerate}
+    \end{enumerate}
 }
 
 \subsection{Algorithm}
-\frame{\frametitle{CBFS - Prepare to Split Work}
+\frame{\frametitle{Clean BFS - Prepare to Split Work}
     \begin{itemize}
         \item One input queue $Q_{in}\subseteq \V$.
             \begin{itemize}
-                \item Each vertex in $Q_{in}$ is unique*
-                \item $\forall_{u\in Q_{in}} Dist_u = \ell$
-                \item $\forall_{u\in Q_{in}} \size{\Gamma_u} > 0$
+                \item Each vertex in $Q_{in}$ is unique
+                \item $\forall u (u \in Q_{in} \Rightarrow Dist_u = \ell)$
+                \item $\forall u (u \in Q_{in} \Rightarrow \size{\Gamma_u} > 0$
             \end{itemize}
         \item Generate $OutDegrees[0\leq i<\size{Q_{in}}] = \size{\Gamma(Q_{in}[i])}$ in parallel
-        \item Perform a parallel prefix sum* on $OutDegrees$
-        \item
+        \item Perform a parallel prefix sum on $OutDegrees$
             \begin{tabular}{r|l|l|l|l|l|l|}
                 \cline{2-7}
                 $Q_{in}=$ &1 & 3 & 2 & 4 & $\ldots$ & $\ldots$ \\ \cline{2-7}
@@ -234,12 +242,12 @@
     \end{itemize}
 }
 
-\frame{\frametitle{CBFS - Split Work and Process Edges}
+\frame{\frametitle{Clean BFS - Split Work and Process Edges}
     \begin{itemize}
         \item Each core $i$ processes $m_\ell/P$ edges
             \begin{itemize}
-                \item searches $OutDegrees$ for $1+\floor{\frac{i \cdot m_\ell}{P}}$ to find starting edge
-                \item does $\Oh{\log \frac{n_\ell}{P} + \log P}$ work*
+                \item searches $OutDegrees$ for $1+\floor{\frac{i ~ m_\ell}{P}}$ to find starting edge
+                \item does $\Oh{\log \frac{n_\ell}{P} + \log P}$ work
                 \item processes $\floor{\frac{m_\ell}{P}}$ consecutive edges
                     \begin{itemize}
                         \item $Q_i \gets \emptyset$
@@ -254,7 +262,7 @@
     \end{itemize}
 }
 
-\frame{\frametitle{CBFS - Dedup Vertexes and Combine Queues}
+\frame{\frametitle{Clean BFS - Dedup Vertexes and Combine Queues}
     \begin{itemize}
         \item $Size_{-1} = 0$
         \item Each core $i$ uses $Owner$ to ensure each vertex lives in at most one output queue
@@ -262,20 +270,20 @@
                 \item $Q_i \gets \set{u \in Q_i : Owner_u = i}$
                 \item $Size_i \gets \size{Q_i}$
             \end{itemize}
-        \item Perform a parallel prefix sum* on $Size$
+        \item Perform a parallel prefix sum on $Size$
         \item Each core $i$ copies its queue back into $Q_{in}$ at offset $Size_{i-1}$
     \end{itemize}
 }
 
-\frame{\frametitle{CBFS - Reducing $W_P$ for binary searches}
+\frame{\frametitle{Clean BFS - Reduce Search Space}
     \begin{itemize}
         \item $N \gets \size{OutDegrees}$
         \item Each core $i$
             \begin{itemize}
                 \item $FirstDegree \gets OutDegrees[\floor{\frac{iN}{P}}-1]$
                 \item $FirstDegreeNext \gets OutDegrees[\floor{\frac{(i+1)N}{P}}-1]$
-                \item $FirstCore \gets \ceil{\frac{P\cdot FirstDegree}{m_\ell}}$
-                \item $LastCore \gets \ceil{\frac{P\cdot FirstDegreeNext}{m_\ell}}$
+                \item $FirstCore \gets \ceil{\frac{P~ FirstDegree}{m_\ell}}$
+                \item $LastCore \gets \ceil{\frac{P~ FirstDegreeNext}{m_\ell}}$
                 \item parallel for $j \gets FirstCore$ to $LastCore$
                 \item \T $SubList_j \gets i$
             \end{itemize}
@@ -284,7 +292,7 @@
     \end{itemize}
 }
 
-\frame{\frametitle{CBFS - Reducing $W_P$ for parallel prefix sums}
+\frame{\frametitle{Clean BFS - Dynamically Choose Number of Cores}
     \begin{itemize}
         \item Immediately after calculating $m_\ell$
         \item $P_\ell \gets \min(m_\ell, P)$
@@ -296,11 +304,11 @@
 
 \frame{\frametitle{Future Work}
     \begin{itemize}
-        \item Optimize CBFS for the PRAM model
+        \item Optimize Clean BFS for the PRAM model
             \begin{itemize}
-                \item CBFS runs in same time for PRAM but is not asymptotically optimal
+                \item Clean BFS runs in same time for PRAM but is not asymptotically optimal
             \end{itemize}
-        \item Modify CBFS to remove false sharing
+        \item Modify Clean BFS to remove false sharing
     \end{itemize}
 }
 
@@ -309,7 +317,7 @@
             \begin{itemize}
                 \item $T_P = \Oh{n/P + m/P + D\log P}$
                 \item $T_1 = \Oh{n+m}$
-                \item $W_P = \Oh{n+m+DP\log P}$*\maybepause
+                \item $W_P = \Oh{n+m+DP\log P}$\maybepause
             \end{itemize}
         \item 
 \fi
@@ -319,7 +327,7 @@
 \begin{frame}[allowframebreaks]
     \frametitle{References}
     %\bibliographystyle{amsalpha}
-    \bibliographystyle{plain}
+    \bibliographystyle{apalike}
     \bibliography{../source/bib/paper.bib}
 \end{frame}
 
