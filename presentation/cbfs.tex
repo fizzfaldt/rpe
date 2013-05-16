@@ -1,0 +1,464 @@
+% This text is proprietary.
+% It's a part of presentation made by myself.
+% It may not used commercial.
+% The noncommercial use such as private and study is free
+% Sep. 2005
+% Author: Sascha Frank
+% University Freiburg
+% www.informatik.uni-freiburg.de/~frank/
+
+
+\documentclass{beamer}
+\usepackage{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
+
+\def\var#1{\mbox{\textrm{\bf{\sc{#1}}}}}
+\newcommand{\set}[1]{\{#1\}}
+\newcommand{\V}{\mathbb{V}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
+
+\newcommand {\framedgraphic}[3] {
+    \frame{\frametitle{#1}
+        \begin{center}
+            \includegraphics[width=\textwidth,height=#3\textheight,keepaspectratio]{#2}
+        \end{center}
+    }
+}
+\newcommand{\disableframe}[1]{}
+
+\def\func#1#2{\mbox{\textrm{\bf{\sc{#1}}}}\ensuremath{(~{#2}~)}}
+% pseudocode notations
+\newcommand{\T}{\mbox{\hspace{0.5cm}}}
+
+% asymptotic notations
+\newcommand{\Oh}[1]{\ensuremath{{\mathcal O}\left({#1}\right)}}
+\newcommand{\Om}[1]{\ensuremath{{\Omega}\left({#1}\right)}}
+\newcommand{\Th}[1]{\ensuremath{{\Theta}\left({#1}\right)}}
+
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor#1\right\rfloor}}
+\newcommand{\maybepause}{
+    \iffalse
+    \pause
+    \fi
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
+
+\begin{document}
+\title{Clean Breadth First Search}
+\author{Yonatan R. Fogel}
+\date{\today}
+
+\frame{\titlepage}
+
+%TODO: Maybe re-add table of contents
+%\frame{\frametitle{Table of contents}\tableofcontents}
+
+
+\section{Introduction}
+\frame{\frametitle{BFS Problem Description}
+    \begin{itemize}
+        \item Given
+            \begin{itemize}
+                \item Graph $G=(\V,\E)$
+                \item Distinguished source vertex $s \in \V$
+            \end{itemize}
+        \item Calculate
+            \begin{itemize}
+                \item $Dist_{u\in \V} =$ length of the shortest path from $s$ to $u$ in $G$
+                \item *$Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
+            \end{itemize}
+    \end{itemize}
+}
+
+\framedgraphic{BFS Example}{bfs-1.png}{0.6}
+
+\frame{\frametitle{Terms Used in this Presentation}
+    \begin{itemize}
+        \item $n= \size{\V}$ the number of nodes in a graph \maybepause
+        \item $m= \size{\E}$ the number of edges in a graph \maybepause
+        \item $D= \Oh{n}$ the diameter of a graph \maybepause
+        \item $\Gamma_u$ the set of vertexes adjacent to $u$ \maybepause
+        \item $T_s$ the running time for a serial algorithm \maybepause
+        \item $T_P$ the running time for a parallel algorithm running on $P$ cores \maybepause
+        \item $T_\infty$ the running time for a parallel algorithm running on infinite cores
+        \item $T_1 = \Om{T_s}$ the running time for a parallel algorithm running on one core \maybepause
+        \item $W_P = \Om{T_s}$ the total work done by a parallel algorithm running on $P$ cores (excluding idle time)
+            \begin{itemize}
+                \item Reducing $W_P$ can reduce energy use \cite{race-to-idle}
+            \end{itemize}
+            %TODO: motivation for W_P
+    \end{itemize}
+}
+
+\frame{\frametitle{Serial-BFS}
+    \begin{enumerate}
+        \item for each vertex $u \in \V$
+        \item \T $Dist_u \gets \infty$
+        \item $Dist_s \gets 0$
+        \item $Q \gets \emptyset$
+        \item $\func{Enqueue}{Q, ~s}$
+        \item while $Q \neq \emptyset$ do
+        \item \T $u \gets \func{Dequeue}{Q}$
+        \item \T for each vertex $v$ in $\Gamma(u)$ do
+        \item \T \T if $Dist_v = \infty$ then
+        \item \T \T \T $Dist_v \gets Dist_u + 1$
+        \item \T \T \T $\func{Enqueue}{Q, v}$
+    \end{enumerate}
+}
+
+\frame{\frametitle{Model of Computation}
+    \begin{itemize}
+        \item Large shared memory
+        \item Consistent caches between cores
+        \item Synchronizing $x$ tasks takes $T_\infty=\Th{\log x}$ time
+        \item Cilk has this model with randomized work stealing \cite{cilk}
+    \end{itemize}
+}
+
+\frame{\frametitle{Motivation for (P)BFS}
+    BFS is used for
+    \begin{itemize}
+        \item Path Finding 
+            \begin{itemize}
+                \item Video Games
+                \item Google Maps\maybepause
+            \end{itemize}
+        \item Analyzing social networks \maybepause %TODO: ref
+        \item Designing and analyzing VLSI \maybepause %TODO: ref
+        \item Task scheduling \maybepause %TODO: ref
+        \item As a primitive in other algorithms
+    \end{itemize}
+}
+
+\disableframe{\frametitle{Motivation for PBFS}
+    BFS can achieve significant speedup for practical graphs
+    %TODO: maybe delete this slide?  Or add more
+}
+
+\frame{\frametitle{Existing Approaches for PBFS}
+    \begin{itemize}
+        \item Assumes somewhat unrealistic PRAM model \maybepause
+        \item Specialized for specific hardware \cite{blue-bfs}
+            \begin{itemize}
+                \item GPU
+                \item CRAY (hardware mutex every $64$ bits, atomic add) \maybepause
+                    \cite{cray-bfs}
+            \end{itemize}
+        \item Uses atomic instructions\cite{block-queue-bfs}
+        \item Specialized for sparse (dense) graphs only
+        \item Specialized for bounded out-degree  (Not scale-free) \cite{mit-bag} \maybepause
+        \item $T_1$ or $T_p$ is not asymptotically optimal \maybepause
+        \item Room for energy efficiency improvements (non-optimal $W_P$) \maybepause
+        \item Offloads some work to scheduler
+            \begin{itemize}
+                \item Work-stealing (randomized) gives at best high probability bounds
+                    \cite{mit-bag}
+            \end{itemize}
+        \item Non level-synchronous\cite{distinguished-bfs}
+    \end{itemize}
+}
+
+\frame{\frametitle{Existing Algorithms}
+    \begin{itemize}
+        \item MIT-bag \cite{mit-bag} uses penants, bags, and reducer hyperobjects \pause
+        \item block-queue-bfs \cite{block-queue-bfs} allocates space from FIFO in blocks \pause
+        \item distinguished-bfs \cite{distinguished-bfs} contracts the graph to make it dense \pause
+        \item cray-bfs \cite{cray-bfs} uses fast hardware mutexes and atomic increments
+    \end{itemize}
+}
+
+\frame{\frametitle{Level-Synchronous BFS}
+    \begin{itemize}
+        \item All nodes at distance $d$ from $s$ are processed before any nodes at distance $d^\prime > d$. \maybepause
+        \item $T_P = \Om{n/p+m/p+D\log P}$ \maybepause
+            \begin{itemize}
+                \item $T_p = \Om{T_s/P} = \Om{n/p+m/p}$ \maybepause
+                \item Let $n_\ell, m_\ell$ be the number of nodes and edges visited at level $\ell$. \maybepause
+                \item Consider a graph where $\forall_{0<\ell\leq D}n_\ell+m_\ell=\Th{P}$
+                \item Every level has $\Th{P}$ work and uses $P_\ell \leq P$ cores
+                \item For each level, $T_p = \Om{P/P_\ell + \log P_\ell} = \Om{\log P}$ time
+            \end{itemize}
+            %TODO: improve description of problem
+    \end{itemize}
+}
+
+\frame{\frametitle{Bottlenecks for Parallelizing BFS}
+    \begin{itemize}
+        \item FIFO
+        \item $Dist$ array
+    \end{itemize}
+}
+
+\section{Clean BFS}
+\frame{\frametitle{Clean BFS - Properties}
+    \begin{itemize}
+        \item $T_s = \Oh{n+m}$
+        \item $T_1 = \Oh{n+m}$
+        \item $W_P = \Oh{n+m}$
+        \item $T_P = \Oh{n/p+m/p+D\log P}$
+        \item Scale-free
+        \item Deterministic worst case bounds
+    \end{itemize}
+}
+
+\frame{\frametitle{Clean BFS - Approach}
+    \begin{itemize}
+        \item Evenly split edges among cores using prefix sum and binary search
+        \item Combine output queues using prefix sum
+    \end{itemize}
+    %TODO improve this slide
+}
+
+\subsection{Algorithm}
+\frame{\frametitle{CBFS - Prepare to Split Work}
+    \begin{itemize}
+        \item One input queue $Q_{in}\subseteq \V$.
+            \begin{itemize}
+                \item Each vertex in $Q_{in}$ is unique*
+                \item $\forall_{u\in Q_{in}} Dist_u = \ell$
+                \item $\forall_{u\in Q_{in}} \size{\Gamma_u} > 0$
+            \end{itemize}
+        \item Generate $OutDegrees[0\leq i<\size{Q_{in}}] = \size{\Gamma(Q_{in}[i])}$ in parallel
+        \item Perform a parallel prefix sum* on $OutDegrees$
+        \item
+            \begin{tabular}{r|l|l|l|l|l|l|}
+                \cline{2-7}
+                $Q_{in}=$ &1 & 3 & 2 & 4 & $\ldots$ & $\ldots$ \\ \cline{2-7}
+  $OutDegrees_{before} =$ &1 & 3 & 2 & 4 & $\ldots$ & $\ldots$ \\ \cline{2-7}
+  $OutDegrees_{after}  =$ &1 & 4 & 6 & 10 & $\ldots$ & $m_\ell$ \\ \cline{2-7}
+            \end{tabular}
+    \end{itemize}
+}
+
+\frame{\frametitle{CBFS - Split Work and Process Edges}
+    \begin{itemize}
+        \item Each core $i$ processes $m_\ell/P$ edges
+            \begin{itemize}
+                \item searches $OutDegrees$ for $1+\floor{\frac{i \cdot m_\ell}{P}}$ to find starting edge
+                \item does $\Oh{\log \frac{n_\ell}{P} + \log P}$ work*
+                \item processes $\floor{\frac{m_\ell}{P}}$ consecutive edges
+                    \begin{itemize}
+                        \item $Q_i \gets \emptyset$
+                        \item for each edge $(u,v)$
+                        \item \T if $Dist_v = \infty$ then
+                        \item \T \T $Dist_v \gets Dist_u + 1$
+                        \item \T \T $Owner_v \gets i$
+                        \item \T \T $\func{Enqueue}{Q_i, v}$
+                    \end{itemize}
+                \item Benign race conditions
+            \end{itemize}
+    \end{itemize}
+}
+
+\frame{\frametitle{CBFS - Dedup Vertexes and Combine Queues}
+    \begin{itemize}
+        \item $Size_{-1} = 0$
+        \item Each core $i$ uses $Owner$ to ensure each vertex lives in at most one output queue
+            \begin{itemize}
+                \item $Q_i \gets \set{u \in Q_i : Owner_u = i}$
+                \item $Size_i \gets \size{Q_i}$
+            \end{itemize}
+        \item Perform a parallel prefix sum* on $Size$
+        \item Each core $i$ copies its queue back into $Q_{in}$ at offset $Size_{i-1}$
+    \end{itemize}
+}
+
+\frame{\frametitle{CBFS - Reducing $W_P$ for binary searches}
+    \begin{itemize}
+        \item $N \gets \size{OutDegrees}$
+        \item Each core $i$
+            \begin{itemize}
+                \item $FirstDegree \gets OutDegrees[\floor{\frac{iN}{P}}-1]$
+                \item $FirstDegreeNext \gets OutDegrees[\floor{\frac{(i+1)N}{P}}-1]$
+                \item $FirstCore \gets \ceil{\frac{P\cdot FirstDegree}{m_\ell}}$
+                \item $LastCore \gets \ceil{\frac{P\cdot FirstDegreeNext}{m_\ell}}$
+                \item parallel for $j \gets FirstCore$ to $LastCore$
+                \item \T $SubList_j \gets i$
+            \end{itemize}
+        \item Using $SubList_i$, core $i$ can search only $n_\ell/p$ indexes
+        \item $W_P$ goes from $\Oh{n+m+DP\log P}$ to $\Oh{n+m+DP}$
+    \end{itemize}
+}
+
+\frame{\frametitle{CBFS - Reducing $W_P$ for parallel prefix sums}
+    \begin{itemize}
+        \item Immediately after calculating $m_\ell$
+        \item $P_\ell \gets \min(m_\ell, P)$
+        \item Use at most $P_\ell$ cores until next time $m_\ell$ is calculated.
+        \item This ensures the $\Oh{P_\ell}$ work every level is $\Oh{m_\ell}$ and can be absorbed into the constant.
+        \item $W_P$ goes from $\Oh{n+m+DP}$ to $\Oh{n+m+D}=\Oh{n+m}$
+    \end{itemize}
+}
+
+\frame{\frametitle{Future Work}
+    \begin{itemize}
+        \item Optimize CBFS for the PRAM model
+            \begin{itemize}
+                \item CBFS runs in same time for PRAM but is not asymptotically optimal
+            \end{itemize}
+        \item Modify CBFS to remove false sharing
+    \end{itemize}
+}
+
+\iffalse
+        \item Combined over all levels
+            \begin{itemize}
+                \item $T_P = \Oh{n/P + m/P + D\log P}$
+                \item $T_1 = \Oh{n+m}$
+                \item $W_P = \Oh{n+m+DP\log P}$*\maybepause
+            \end{itemize}
+        \item 
+\fi
+
+
+
+\begin{frame}[allowframebreaks]
+    \frametitle{References}
+    %\bibliographystyle{amsalpha}
+    \bibliographystyle{plain}
+    \bibliography{../source/bib/paper.bib}
+\end{frame}
+
+\end{document}
+
+
+
+
+
+
+%TODO:
+Add figures/slides/references for:
+
+
+False sharing
+CILK+
+
+Related work
+    m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\iffalse
+%\subsection{Subsection no.1.1  }
+%\frame{
+%Without title somethink is missing.
+%}
+
+
+\section{Section no. 2}
+\subsection{Lists I}
+\frame{\frametitle{unnumbered lists}
+\begin{itemize}
+\item Introduction to  \LaTeX
+\item Course 2
+\item Termpapers and presentations with \LaTeX
+\item Beamer class
+\end{itemize}
+}
+
+\frame{\frametitle{lists with maybepause}
+\begin{itemize}
+\item Introduction to  \LaTeX \maybepause
+\item Course 2 \maybepause
+\item Termpapers and presentations with \LaTeX \maybepause
+\item Beamer class
+\end{itemize}
+}
+
+\subsection{Lists II}
+\frame{\frametitle{numbered lists}
+\begin{enumerate}
+\item Introduction to  \LaTeX
+\item Course 2
+\item Termpapers and presentations with \LaTeX
+\item Beamer class
+\end{enumerate}
+}
+\frame{\frametitle{numbered lists with maybepause}
+\begin{enumerate}
+\item Introduction to  \LaTeX \maybepause
+\item Course 2 \maybepause
+\item Termpapers and presentations with \LaTeX \maybepause
+\item Beamer class
+\end{enumerate}
+}
+
+\section{Section no.3}
+\subsection{Tables}
+\frame{\frametitle{Tables}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Date} & \textbf{Instructor} & \textbf{Title} \\
+\hline
+WS 04/05 & Sascha Frank & First steps with  \LaTeX  \\
+\hline
+SS 05 & Sascha Frank & \LaTeX \ Course serial \\
+\hline
+\end{tabular}}
+
+
+\frame{\frametitle{Tables with maybepause}
+\begin{tabular}{c c c}
+A & B & C \\
+\maybepause
+1 & 2 & 3 \\
+\maybepause
+A & B & C \\
+\end{tabular} }
+
+
+\section{Section no. 4}
+\subsection{blocs}
+\frame{\frametitle{blocs}
+
+\begin{block}{title of the bloc}
+bloc text
+\end{block}
+
+\begin{exampleblock}{title of the bloc}
+bloc text
+\end{exampleblock}
+
+
+\begin{alertblock}{title of the bloc}
+bloc text
+\end{alertblock}
+}
+\fi

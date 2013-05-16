@@ -1,0 +1,91 @@
+Slides:
+    - Title/Hi, my name is..
+    - What is the problem?
+        Define BFS problem
+        Dist only version, Dist+parent version
+        Include T_s, FIGURE showing level-synchronous version
+        "FIGURE" for pseudocode for serial version
+    - Introduce parallel terms T_s, T_1, T_p, T_\infty, W_p
+        Motivation for each term, lower and upper bounds
+        e.g. T_1 = Omega(T_s)
+        W_p = Omega(T_1)
+        W_p = Omega(T_p)
+            Energy, scheduling motivation
+        T_p = Omega(T_1/p)
+    - Introduce Model
+    - Introduce Lower Bound for model (level-sync)
+    - Basic parallel version for level-synchronous
+        -Bottlenecks/issues
+    -Introduction for motivation for BFS
+        -motivation for parallel bfs
+        -motivation for improving parallel bfs
+    -Related approaches
+        DIST:
+            Mutex
+            Cray-Hardware Mutex
+            Let race happen and do extra work
+            Let race happen, plus owner array and dedup
+            Let race happen, plus owner array dedup on the fly (only disable duplicate expansion)
+        FIFO:
+            Mutex (serialize on FIFO)
+                Does not fully serialize, because many nodes may be adjacent to a given node
+            Block-accessed FIFO
+                Use atomic primitive to allocate 'BLOCK's in fifo.  Can use up to one extra Block per processor (extra memory)
+                    Processing time only costs extra O(1) per 'empty' block
+                    Might make distribution uneven when not using work-stealing scheduler
+            Hardware memory "mutexes"
+                Cray
+            TODO: GPU Prefix-Sum allocation???
+        Non-deterministic:
+            (often) ignores overhead of randomized work-stealing scheduler, or costs more because of it
+        non-scale-free
+        Difficult to analyze when 'dup' race condition happens
+        'Different' approaches
+            Find parent instead of iterating over queue.. does not use queue
+                CITATION!!???
+        non-level-sync
+            Involves contracting to distinguished and then super-distinguished vertexes until graph becomes dense
+            Then solving for dense graph and fixing up
+    - New Algo bounds
+        - Matches lower bound in every way
+            - Show bounds for normal pps
+            - Show bounds for 'new' pps
+        - Basic description
+            - scale-free
+            - energy efficient
+            - supports deterministic scheduler
+                -even targetted scheduler.. only overhead is launching tasks
+            - Description of race conditions (small window)
+            - Analysis works even if you remove 'OWNER' array + dedup, which should increase speed in practice
+            - Explanation/Analysis of W_p optimization to go from n+m+Dplogp -> n+m+Dp
+                - Linear scan/FindSublist
+            - Analysis of W_p optimization to go from n+m+Dp -> n+m+D = O(n+m)
+                - Choosing P_l every level after learning W
+
+        Many figures (including code)
+            - Every level starts with input array (show invariants), show how to create invariant for first level
+                input array unique (unless no owner array), every item has outdegree > 0
+            - Create Degree array
+            - PPS Degree array
+            - Binary search for start point
+
+            - binary search->O(1) per proc optimization
+            - no figure (but maybe code) for reduce #processors optimization
+
+
+    - New PPS
+        - Description
+        - Analysis
+        - Description of how to target processors for deterministic scheduler/targetted scheduler
+    - Future work
+        - Minor figure showing false sharing (maybe drawing)
+        - Other future work
+            - In other model, can use approx parallel prefix sum to get it down to n/p+m/p+Dloglog p (maybe?)
+        
+
+    
+
+
+        Replace FIFO
+
+        
