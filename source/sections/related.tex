@@ -3,6 +3,11 @@
 
 \subsection{Terms}
 \begin{itemize}
+    \item $G=(V,E)$ is the graph.
+    \item $V$ is the set of nodes.
+    \item $n=\size{V}$.
+    \item $m=\size{E}$.
+    \item $\Gamma(u)$ is the set of nodes adjacent to node $u$.
     \item $T_s$ is the running time for the most efficient serial algorithm.
     \item $T_1 \equiv \var{Work}$ is the running time for a parallel algorithm running on one processing elements.
     \item $T_p$ is the running time for a parallel algorithm running on $p$ processing elements.
@@ -11,10 +16,9 @@
 \end{itemize}
 
 
-\subsection{Level-Synchronous BFS Algorithms}
-One approach for BFS is to find all nodes at distance $0\leq d \leq \size{V}$ from the source before any nodes at distance $d^\prime > d$.
+We consider only \defn{level-synchronous} BFS algorithms, which find all nodes at distance $0\leq d \leq \size{V}$ before any nodes at distance $d^\prime > d$.
 
-The general approach for Level-Synchronous BFS can be seen in \ref{fig:general-bfs}.
+The standard serial approach for level-synchronous BFS can be seen in Fig. \ref{fi:general-bfs}.
 \codefigure{
     $\func{Serial-BFS}{V, ~\Gamma, ~s}$
 
@@ -22,17 +26,30 @@ The general approach for Level-Synchronous BFS can be seen in \ref{fig:general-b
         \item \xfor each vertex $u \in V$
         \item \T $\array{Dist}{u} \gets \infty$
         \item $\array{Dist}{s} \gets 0$
-        \item \xwhile $Q \neq \emptyset$ \xdo
-        \item \T $u \gets \func{Dequeue}{Q}$
-        \item \T \xfor each vertex $v \in \Gamma(u)$ \xdo
-        \item \T \T \xif $\array{Dist}{v} = \infty$ \xthen
-        \item \T \T \T $\array{Dist}{v} \gets \array{Dist}{u} + 1$
-        \item \T \T \T $\func{Enqueue}{Q, ~v}$
+        \item $\func{Enqueue}{Q_{in}, ~v}$
+        \item \xwhile $Q_{in} \neq \emptyset$ \xdo
+        \item \T $Q_{out} \gets \emptyset$
+        \item \T \xwhile $Q_{in} \neq \emptyset$ \xdo
+        \item \T \T $u \gets \func{Dequeue}{Q_{in}}$
+        \item \T \T \xfor each vertex $v \in \Gamma(u)$ \xdo
+        \item \T \T \T \xif $\array{Dist}{v} = \infty$ \xthen \label{bfs-race-1}
+        \item \T \T \T \T $\array{Dist}{v} \gets \array{Dist}{u} + 1$
+        \item \T \T \T \T $\func{Enqueue}{Q_{out}, ~v}$
+        \item \T $Q_{in} \gets Q_{out}$\label{bfs-race-2}
     \end{enumerate}
-}{General approach for Level-Synchronous BFS}{general-bfs}
+}{Standard serial level-synchronous breadth-first search implementation on a graph $G=(V,E)$ with source vertex $s\in V$. $\Gamma(u)$ is the adjacency list for node $u$.}{general-bfs}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%BEGIN
-\cite{mit-bag} uses data structures called \defn{penants} and \defn{bags}
+The bottlenecks for parallelization are the FIFO queue and the \var{Dist} array.  The FIFO is fast but is inherently serial.  When running in parallel, there is a benign race condition on lines \ref{bfs-race-1}--\ref{bfs-race-2} of Fig. \ref{fi:general-bfs}.  Multiple threads can enqueue the same vertex.  The race is benign and rare: it can create extra work but does not affect correctness.  This race is sometimes dealt with mutual exclusion, atomic instructions, or by simply performing the extra work when the race occurs.
 
-\definition{soup}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%END
+\subsection*{Existing algorithms}
+\defn{MIT-Bag}\cite{mit-bag} uses reducer hyperobjects and a new \defn{bag} data structure to replace the FIFO.
+This algorithm relies on a work-stealing scheduler and runs in $T_p = \Oh{n/p+m/p+D\lg^3(n/D)}$ w.h.p in $n$.
+MIT-Bag uses mutual exclusion to deal with the race conditions on \var{Dist} for analysis, but in practice recommends simply doing the extra work.
+
+\defn{CRAY-BFS}\cite{cray-bfs} uses special hardware available on the Cray MTA-2 platform.  It writes to the FIFO in parallel by using atomic increments, and uses special hardware mutexes for every $64$-bit word.
+
+\defn{Block-BFS}\cite{block-queue-bfs} uses a block-accessed queue to replace the FIFO.  It uses atomic primitives to allocate blocks from the FIFO that are small, but not so small so that they do not use atomics too often.
+
+\defn{Distinguished-BFS}\cite{distinguished-bfs} is a non level-synchronous BFS algorithm for arbitrary sparse graphs. Distinguished-BFS runs in $T_p = \Oh{n^\epsilon}$ time with $\Oh{mn^{1-2\epsilon}}$ processors, if $m\geq n^{2-3\epsilon}$.  The basic idea is to contract the graph to distinguished and then superdistinguished vertexes, at which point the graph will be dense.
+
+%TODO: search for prefix sum bfs (GPU), search Guy Blelloch, search recent BFS
