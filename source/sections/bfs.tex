@@ -1,4 +1,14 @@
-\section{BFS(RENAME)}
+\section{FBFS}
+
+\subsection{Lower Bound}
+We establish a lower bound for the parallel running time of level-synchronous BFS.
+Let \defn{D} be the diameter of a graph $G=(V,E)$, $n=\size{V}, m=\size{E}$.
+
+For level-synchronous BFS, $T_s=\Oh{n+m+D}=\Oh{n+m}$ is a lower bound for both $T_1$ and $W_p$. 
+Let $n_l$ be the number of nodes at distance $l$ from the source vertex, and $m_l$ be the sum of out-degrees
+of the $n_l$ nodes at distance $l$.
+To establish the lower bound for $T_p$, consider a graph where for every level $l$, $(n_l+m_l) = \Oh(p)$.
+$n_l+m_l$ 
 
 BFS algo
 \begin{verbatim}
