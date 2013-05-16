@@ -139,7 +139,16 @@
     %TODO: maybe delete this slide?  Or add more
 }
 
-\frame{\frametitle{Existing Approaches for PBFS}
+\frame{\frametitle{Existing Algorithms}
+    \begin{itemize}
+        \item MIT-bag \cite{mit-bag} uses penants, bags, and reducer hyperobjects \pause
+        \item block-queue-bfs \cite{block-queue-bfs} allocates space from FIFO in blocks \pause
+        \item distinguished-bfs \cite{distinguished-bfs} contracts the graph to make it dense \pause
+        \item cray-bfs \cite{cray-bfs} uses fast hardware mutexes and atomic increments
+    \end{itemize}
+}
+
+\frame{\frametitle{General Approaches}
     \begin{itemize}
         \item Assumes PRAM model \maybepause
         \item Specialized for specific hardware \cite{blue-bfs}
@@ -162,22 +171,13 @@
     \end{itemize}
 }
 
-\frame{\frametitle{Existing Algorithms}
-    \begin{itemize}
-        \item MIT-bag \cite{mit-bag} uses penants, bags, and reducer hyperobjects \pause
-        \item block-queue-bfs \cite{block-queue-bfs} allocates space from FIFO in blocks \pause
-        \item distinguished-bfs \cite{distinguished-bfs} contracts the graph to make it dense \pause
-        \item cray-bfs \cite{cray-bfs} uses fast hardware mutexes and atomic increments
-    \end{itemize}
-}
-
 \frame{\frametitle{Level-Synchronous BFS}
     \begin{itemize}
-        \item All nodes at distance $d$ from $s$ are processed before any nodes at distance $d^\prime > d$. \maybepause
+        \item All nodes at distance $d$ from $s$ are processed before any nodes at distance $d^\prime > d$ \maybepause
         \item $T_P = \Om{n/p+m/p+D\log P}$ \maybepause
             \begin{itemize}
                 \item $T_p = \Om{T_s/P} = \Om{n/p+m/p}$ \maybepause
-                \item Let $n_\ell, m_\ell$ be the number of nodes and edges visited at level $\ell$. \maybepause
+                \item Let $n_\ell, m_\ell$ be the number of nodes and edges visited at level $\ell$ \maybepause
                 \item Consider a graph where $\forall_{0<\ell\leq D}n_\ell+m_\ell=\Th{P}$
                 \item Every level has $\Th{P}$ work and uses $P_\ell \leq P$ cores
                 \item For each level, $T_p = \Om{P/P_\ell + \log P_\ell} = \Om{\log P}$ time
@@ -224,13 +224,13 @@
 
 \subsection{Algorithm}
 \frame{\frametitle{Clean BFS - Prepare to Split Work}
-    \begin{itemize}
-        \item One input queue $Q_{in}\subseteq \V$.
-            \begin{itemize}
+    \begin{enumerate}
+        \item One input queue $Q_{in}\subseteq \V$
+            \begin{enumerate}
                 \item Each vertex in $Q_{in}$ is unique
                 \item $\forall u (u \in Q_{in} \Rightarrow Dist_u = \ell)$
                 \item $\forall u (u \in Q_{in} \Rightarrow \size{\Gamma_u} > 0$
-            \end{itemize}
+            \end{enumerate}
         \item Generate $OutDegrees[0\leq i<\size{Q_{in}}] = \size{\Gamma(Q_{in}[i])}$ in parallel
         \item Perform a parallel prefix sum on $OutDegrees$
             \begin{tabular}{r|l|l|l|l|l|l|}
@@ -239,66 +239,72 @@
   $OutDegrees_{before} =$ &1 & 3 & 2 & 4 & $\ldots$ & $\ldots$ \\ \cline{2-7}
   $OutDegrees_{after}  =$ &1 & 4 & 6 & 10 & $\ldots$ & $m_\ell$ \\ \cline{2-7}
             \end{tabular}
-    \end{itemize}
+    \end{enumerate}
 }
 
 \frame{\frametitle{Clean BFS - Split Work and Process Edges}
-    \begin{itemize}
+    \begin{enumerate}
         \item Each core $i$ processes $m_\ell/P$ edges
-            \begin{itemize}
+            \begin{enumerate}
                 \item searches $OutDegrees$ for $1+\floor{\frac{i ~ m_\ell}{P}}$ to find starting edge
                 \item does $\Oh{\log \frac{n_\ell}{P} + \log P}$ work
                 \item processes $\floor{\frac{m_\ell}{P}}$ consecutive edges
-                    \begin{itemize}
+                    \begin{enumerate}
                         \item $Q_i \gets \emptyset$
                         \item for each edge $(u,v)$
                         \item \T if $Dist_v = \infty$ then
                         \item \T \T $Dist_v \gets Dist_u + 1$
                         \item \T \T $Owner_v \gets i$
                         \item \T \T $\func{Enqueue}{Q_i, v}$
-                    \end{itemize}
+                    \end{enumerate}
                 \item Benign race conditions
-            \end{itemize}
-    \end{itemize}
+            \end{enumerate}
+    \end{enumerate}
 }
 
 \frame{\frametitle{Clean BFS - Dedup Vertexes and Combine Queues}
-    \begin{itemize}
+    \begin{enumerate}
         \item $Size_{-1} = 0$
         \item Each core $i$ uses $Owner$ to ensure each vertex lives in at most one output queue
-            \begin{itemize}
+            \begin{enumerate}
                 \item $Q_i \gets \set{u \in Q_i : Owner_u = i}$
                 \item $Size_i \gets \size{Q_i}$
-            \end{itemize}
+            \end{enumerate}
         \item Perform a parallel prefix sum on $Size$
         \item Each core $i$ copies its queue back into $Q_{in}$ at offset $Size_{i-1}$
-    \end{itemize}
+    \end{enumerate}
 }
 
 \frame{\frametitle{Clean BFS - Reduce Search Space}
-    \begin{itemize}
+    \begin{enumerate}
         \item $N \gets \size{OutDegrees}$
         \item Each core $i$
-            \begin{itemize}
+            \begin{enumerate}
                 \item $FirstDegree \gets OutDegrees[\floor{\frac{iN}{P}}-1]$
                 \item $FirstDegreeNext \gets OutDegrees[\floor{\frac{(i+1)N}{P}}-1]$
                 \item $FirstCore \gets \ceil{\frac{P~ FirstDegree}{m_\ell}}$
                 \item $LastCore \gets \ceil{\frac{P~ FirstDegreeNext}{m_\ell}}$
                 \item parallel for $j \gets FirstCore$ to $LastCore$
                 \item \T $SubList_j \gets i$
-            \end{itemize}
+            \end{enumerate}
         \item Using $SubList_i$, core $i$ can search only $n_\ell/p$ indexes
-        \item $W_P$ goes from $\Oh{n+m+DP\log P}$ to $\Oh{n+m+DP}$
-    \end{itemize}
+        \item $W_P$ reduces from $\Oh{n+m+DP\log P}$ to $\Oh{n+m+DP}$
+    \end{enumerate}
 }
 
 \frame{\frametitle{Clean BFS - Dynamically Choose Number of Cores}
     \begin{itemize}
-        \item Immediately after calculating $m_\ell$
-        \item $P_\ell \gets \min(m_\ell, P)$
-        \item Use at most $P_\ell$ cores until next time $m_\ell$ is calculated.
-        \item This ensures the $\Oh{P_\ell}$ work every level is $\Oh{m_\ell}$ and can be absorbed into the constant.
-        \item $W_P$ goes from $\Oh{n+m+DP}$ to $\Oh{n+m+D}=\Oh{n+m}$
+        \item In ``Prepare to Split Work'', right after the parallel prefix sum, $P_\ell \gets \func{min}{m_\ell, P}$
+        \item Use at most $P_\ell$ cores until next time $m_\ell$ is calculated
+        \item This ensures the $\Oh{P_\ell}$ work every level is $\Oh{m_\ell}$
+        \item $W_P$ reduces from $\Oh{n+m+DP}$ to $\Oh{n+m+D}=\Oh{n+m}$ (optimal)
+    \end{itemize}
+}
+
+\frame{\frametitle{Conclusions}
+    \begin{itemize}
+        \item Clean BFS has optimal $T_1, T_P, W_P$ in our computation model
+        \item TODO MORE?
     \end{itemize}
 }
 
@@ -307,8 +313,14 @@
         \item Optimize Clean BFS for the PRAM model
             \begin{itemize}
                 \item Clean BFS runs in same time for PRAM but is not asymptotically optimal
+                \item Try using approximate parallel prefix sum \cite{Goldberg95optimaldeterministic}
             \end{itemize}
         \item Modify Clean BFS to remove false sharing
+            \begin{itemize}
+                \item Examine using an $\Oh{n}$ sort algorithm for levels where $m_\ell = \Omega{n^\frac{1}{c}}$
+                \item Try to distribute work by cacheline
+            \end{itemize}
+        \item Examine non level-synchronous approaches
     \end{itemize}
 }
 
