@@ -16,7 +16,7 @@
     up all work at a given distance from a source vertex.
 
     FBFS algorithm deterministically matches the lower bound for $T_P$,
-    and is asymptotically optimal for $T_1$.  PBFS saves energy by letting processors
+    is asymptotically optimal for $T_1$, and is scale-free.  FBFS saves energy by letting processors
     become idle whenever possible: total non-idle work among all $P$ processors is $\Oh{T_1}$.
     Our algorithm is non-deterministic in that it contains benign races which may affect
     performance (by up to a constant factor) but not its correctness.  These races can be

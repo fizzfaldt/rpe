@@ -26,9 +26,12 @@ The standard serial approach for level-synchronous BFS can be seen in Fig. \ref{
         \item \xfor each vertex $u \in V$
         \item \T $\array{Dist}{u} \gets \infty$
         \item $\array{Dist}{s} \gets 0$
+        \item $Q_{in} \gets \emptyset$
+                \comment{New empty input queue.}
         \item $\func{Enqueue}{Q_{in}, ~v}$
         \item \xwhile $Q_{in} \neq \emptyset$ \xdo
         \item \T $Q_{out} \gets \emptyset$
+            \comment{New empty output queue.}
         \item \T \xwhile $Q_{in} \neq \emptyset$ \xdo
         \item \T \T $u \gets \func{Dequeue}{Q_{in}}$
         \item \T \T \xfor each vertex $v \in \Gamma(u)$ \xdo
@@ -36,6 +39,7 @@ The standard serial approach for level-synchronous BFS can be seen in Fig. \ref{
         \item \T \T \T \T $\array{Dist}{v} \gets \array{Dist}{u} + 1$
         \item \T \T \T \T $\func{Enqueue}{Q_{out}, ~v}$
         \item \T $Q_{in} \gets Q_{out}$\label{bfs-race-2}
+            \comment{Output queue becomes input queue.}
     \end{enumerate}
 }{Standard serial level-synchronous breadth-first search implementation on a graph $G=(V,E)$ with source vertex $s\in V$. $\Gamma(u)$ is the adjacency list for node $u$.}{general-bfs}
 

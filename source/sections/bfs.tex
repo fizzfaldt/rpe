@@ -13,7 +13,9 @@ Additionally $T_s/P=\Oh{n/P+m/P}$ is a lower bound for $T_P$.
 Therefore the lower bound for $T_P=\Om{n/P+m/P+D\log P}$.
 
 \subsection{FBFS}
-The main innovation of FBFS kjkj;w
+The main innovation of FBFS is using prefix sums to efficiently split and combine the FIFO queues.
+
+
 
 See Fig. \ref{fi:parallel-bfs}.
 
@@ -43,7 +45,6 @@ See Fig. \ref{fi:parallel-bfs}.
         \item \T $\var{Work} \gets \xarray[0:N-1]$
         \item \T \xparallel \xfor $u \gets 0$ \xto $N-1$ \xdo
         \item \T \T $\array{Work}{u} \gets \gamma[\array{Input}{u}]$
-            \comment{}
         \item \T $\func{Parallel-Prefix-Sum}{\var{Work}, \floor{\frac{N}{P}}}$
         \item \T $W \gets \array{Work}{N-1}$
         \item \T $P \gets \func{Min}{P_{max}, ~W}$\label{reduce-p}
