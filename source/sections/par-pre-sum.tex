@@ -1,9 +1,9 @@
 \section{Parallel Prefix Sum}
 % no \IEEEPARstart
 
-Parallel prefix sum is a common primitive used in many parallel algorithms.  In the CILK model, the standard (\Oh{\log n} parallel fors) parallel prefix sum  on $n$ elements runs in $T_\infty=\Oh{\log^2 n}$ or $T_p=\Oh{n/p + \log ^2 p}$.  In the PRAM model it runs in $T_\infty = \Oh{\log n}$.
+Parallel prefix sum is a common primitive used in many parallel algorithms.  In the CILK model, the standard (\Oh{\log n} parallel fors) parallel prefix sum  on $n$ elements runs in $T_\infty=\Oh{\log^2 n}$ or $T_P=\Oh{n/P + \log ^2 P}$.  In the PRAM model it runs in $T_\infty = \Oh{\log n}$.
 
-We introduce a divide-and-conquer version of parallel prefix sum that runs in $T_p = \Oh{n/p + \log p}$. 
+We introduce a divide-and-conquer version of parallel prefix sum that runs in $T_P = \Oh{n/P + \log P}$. 
 
 \codefigure{
     \medskip\noindent\func{Parallel-Prefix-Sum}{V, ~\var{Grain-Size}}

@@ -1,35 +1,26 @@
-\section{FBFS}
+\section{New Parallel BFS}
 
 \subsection{Lower Bound}
 We establish a lower bound for the parallel running time of level-synchronous BFS.
 Let \defn{D} be the diameter of a graph $G=(V,E)$, $n=\size{V}, m=\size{E}$.
 
-For level-synchronous BFS, $T_s=\Oh{n+m+D}=\Oh{n+m}$ is a lower bound for both $T_1$ and $W_p$. 
+For level-synchronous BFS, $T_s=\Oh{n+m+D}=\Oh{n+m}$ is a lower bound for both $T_1$ and $W_P$. 
 Let $n_l$ be the number of nodes at distance $l$ from the source vertex, and $m_l$ be the sum of out-degrees
 of the $n_l$ nodes at distance $l$.
-To establish the lower bound for $T_p$, consider a graph where for every level $l$, $(n_l+m_l) = \Oh(p)$.
-$n_l+m_l$ 
+To establish the lower bound for $T_P$, consider a graph where for every level $l$, $(n_l+m_l) = \Oh{P}$.
+There is therefore $\Oh{P}$ work to be done per level.  If we use $P_l$ processors we have to sync on $P_l$ tasks, which takes $T_P=\Oh{P/P_l + \log P_l}$ which cannot be asymptotically better than $\Oh{\log P}$.
+Additionally $T_s/P=\Oh{n/P+m/P}$ is a lower bound for $T_P$.
+Therefore the lower bound for $T_P=\Om{n/P+m/P+D\log P}$.
 
-BFS algo
-\begin{verbatim}
-parallel for u gets 0 .. n - 1
-\end{verbatim}
+\subsection{FBFS}
+The main innovation of FBFS kjkj;w
 
-\begin{verbatim}
-parallel for i = 0 to p-1
-if i = 0
-var{offset} = 0
-else
-var{offset} = D[\frac{iN}{p}
-    var{offset}
-
-
-    \end{verbatim}
+See Fig. \ref{fi:parallel-bfs}.
 
 \codefigure{
-    $\func{Parallel-BFS}{V, ~\Gamma, ~\gamma, ~s, ~p_{max}}$
+    $\func{Parallel-BFS}{V, ~\Gamma, ~\gamma, ~s, ~P_{max}}$
 
-    {\color{gray} ${V}[0:n-1]$ are the $n$ nodes in the graph.  $\Gamma[u]$ is the sequence of adjacent nodes to node $u$. $\gamma[u] = \size{\Gamma[u]}$.  $s$ is the source vertex from which distance is calculated.  $p_{max}$ is the maximum number of processors to use.  Returns $\array{Dist}{0:n-1}$ which represents the distance from $s$ to each vertex.}
+    {\color{gray} ${V}[0:n-1]$ are the $n$ nodes in the graph.  $\Gamma[u]$ is the sequence of adjacent nodes to node $u$. $\gamma[u] = \size{\Gamma[u]}$.  $s$ is the source vertex from which distance is calculated.  $P_{max}$ is the maximum number of processors to use.  Returns $\array{Dist}{0:n-1}$ which represents the distance from $s$ to each vertex.}
     \noindent
                         % TODO: comment?
     \noindent
@@ -45,7 +36,7 @@ var{offset} = D[\frac{iN}{p}
         \item $\var{Input} \gets \xarray[0:0]$
         \item $\array{Input}{0} \gets s$
         \item $\var{Level} \gets 0$
-        \item $p \gets 1$
+        \item $P \gets 1$
         \item \xwhile $\arraysize{Input} \neq 0$ \xdo
         \item \T $\var{Level} \gets \var{Level} + 1$
         \item \T $\var{N} \gets \arraysize{Input}$
@@ -53,16 +44,17 @@ var{offset} = D[\frac{iN}{p}
         \item \T \xparallel \xfor $u \gets 0$ \xto $N-1$ \xdo
         \item \T \T $\array{Work}{u} \gets \gamma[\array{Input}{u}]$
             \comment{}
-        \item \T $\func{Parallel-Prefix-Sum}{\var{Work}, \floor{\frac{N}{p}}}$
+        \item \T $\func{Parallel-Prefix-Sum}{\var{Work}, \floor{\frac{N}{P}}}$
         \item \T $W \gets \array{Work}{N-1}$
-        \item \T $p \gets \func{Min}{p_{max}, ~W}$
+        \item \T $P \gets \func{Min}{P_{max}, ~W}$\label{reduce-p}
+            \comment{Reduce \#processors to save energy when $W<P_{max}$.}
 
-        \item \T $\var{Sublist} \gets \func{Find-Sublist}{\var{Work}, ~W, ~p}$
+        \item \T $\var{Sublist} \gets \func{Find-Sublist}{\var{Work}, ~W, ~P}$\label{skip-binary-search}
 
-        \item \T $\var{Q} \gets \func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
+        \item \T $\var{Q} \gets \func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~P, ~\var{Level}}$
                                 %TODO call here
-        \item \T $\var{Sizes} \gets \xarray[0:p-1]$
-        \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item \T $\var{Sizes} \gets \xarray[0:P-1]$
+        \item \T \xparallel \xfor $i \gets 0$ \xto $P-1$ \xdo
         \item \T \T $\var{Q-New} \gets \xqueue$
         \item \T \T \T \xfor $v$ \xin $\array{Q}{i}$ \xdo
         \item \T \T \T \T \xif $\array{Owner}{v} = i$ \xthen
@@ -70,8 +62,8 @@ var{offset} = D[\frac{iN}{p}
         \item \T \T $\array{Q}{i} \gets \var{Q-New}$
         \item \T \T $\array{Sizes}{i} \gets \size{\array{Q}{i}}$
         \item \T $\func{Parallel-Prefix-Sum}{\var{Sizes}, 1}$
-        \item \T $\var{Input} \gets \xarray[0:\array{Sizes}{p-1}]$
-        \item \T \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item \T $\var{Input} \gets \xarray[0:\array{Sizes}{P-1}]$
+        \item \T \xparallel \xfor $i \gets 0$ \xto $P-1$ \xdo
         \item \T \T \xif $i = 0$ \xthen
         \item \T \T \T $\var{Offset} \gets 0$
         \item \T \T \xelse
@@ -82,26 +74,26 @@ var{offset} = D[\frac{iN}{p}
 }{}{parallel-bfs}
 
 \codefigure{
-    $\func{Find-Sublist}{\var{Work}, ~W, ~p}$
+    $\func{Find-Sublist}{\var{Work}, ~W, ~P}$
 
                         % TODO: comment?
     \noindent
 
     \begin{enumerate}
         \item $N \gets \arraysize{Work}$
-        \item $p_n \gets \func{Min}{p, ~N}$
-        \item $\var{Sublist} \gets \xarray[0:p-1]$
-        \item $\var{RangesStart} \gets \xarray[0:p_n-1]$
-        \item $\var{RangesEnd} \gets \xarray[0:p_n-1]$
-        \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
+        \item $P_n \gets \func{Min}{P, ~N}$
+        \item $\var{Sublist} \gets \xarray[0:P-1]$
+        \item $\var{RangesStart} \gets \xarray[0:P_n-1]$
+        \item $\var{RangesEnd} \gets \xarray[0:P_n-1]$
+        \item \xparallel \xfor $i \gets 0$ \xto $P_n-1$ \xdo
         \item \T \xif $i = 0$ \xthen
         \item \T \T $\var{FirstDegree} \gets 0$
         \item \T \xelse
-        \item \T \T $\var{FirstDegree} \gets \array{Work}{\floor{\frac{i N}{p_n}} - 1}$
-        \item \T $\var{FirstDegreeNext} \gets \array{Work}{\floor{\frac{(i+1) N}{p_n}}-1}$
-        \item \T $\array{RangesStart}{i} \gets \ceil{\frac{p \cdot \var{FirstDegree}}{W}}$
-        \item \T $\array{RangesEnd}{i} \gets \ceil{\frac{p \cdot \var{FirstDegreeNext}}{W}}-1$
-        \item \xparallel \xfor $i \gets 0$ \xto $p_n-1$ \xdo
+        \item \T \T $\var{FirstDegree} \gets \array{Work}{\floor{\frac{i N}{P_n}} - 1}$
+        \item \T $\var{FirstDegreeNext} \gets \array{Work}{\floor{\frac{(i+1) N}{P_n}}-1}$
+        \item \T $\array{RangesStart}{i} \gets \ceil{\frac{P \cdot \var{FirstDegree}}{W}}$
+        \item \T $\array{RangesEnd}{i} \gets \ceil{\frac{P \cdot \var{FirstDegreeNext}}{W}}-1$
+        \item \xparallel \xfor $i \gets 0$ \xto $P_n-1$ \xdo
         \item \T \xif $\array{RangesStart}{i} \leq \array{RangesEnd}{i}$ \xthen
         \item \T \T \xparallel \xfor $j \gets \array{RangesStart}{i}$ \xto $\array{RangesEnd}{i}$ \xdo
             \comment{Use cores $\array{RangesStart}{i}$ to $\array{RangesEnd}{i}$}
@@ -111,20 +103,20 @@ var{offset} = D[\frac{iN}{p}
 }{}{find-sublist}
 
 \codefigure{
-    $\func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~p, ~\var{Level}}$
+    $\func{Level-To-Queues}{\var{Input}, ~\var{Work}, ~\var{Sublist}, \var{Dist}, ~\Gamma, ~\gamma, ~W, ~P, ~\var{Level}}$
 
                         % TODO: comment?
     \noindent
 
     \begin{enumerate}
         \item $N \gets \arraysize{Work}$
-        \item $p_n \gets \func{Min}{p, ~N}$
-        \item $\var{Q} \gets \xarray[0:p-1]$
-        \item \xparallel \xfor $i \gets 0$ \xto $p-1$ \xdo
+        \item $P_n \gets \func{Min}{P, ~N}$
+        \item $\var{Q} \gets \xarray[0:P-1]$
+        \item \xparallel \xfor $i \gets 0$ \xto $P-1$ \xdo
         \item \T $\array{Q}{i}.\func{Clear}{}$
-        \item \T $\var{FirstDegree} \gets \floor{\frac{iW}{p}}$
-        \item \T $\var{WorkItems} \gets \floor{\frac{(i+1)W}{p}} - \var{FirstDegree}$
-        \item \T $\var{Vertex} \gets \func{Binary-Search-For-Index}{\var{Work}, \floor{\frac{N\cdot\array{Sublist}{i}}{p_n}}, \floor{\frac{N\cdot(\array{Sublist}{i}+1)}{p_n}}, \var{FirstDegree}+1}$
+        \item \T $\var{FirstDegree} \gets \floor{\frac{iW}{P}}$
+        \item \T $\var{WorkItems} \gets \floor{\frac{(i+1)W}{P}} - \var{FirstDegree}$
+        \item \T $\var{Vertex} \gets \func{Binary-Search-For-Index}{\var{Work}, \floor{\frac{N\cdot\array{Sublist}{i}}{P_n}}, \floor{\frac{N\cdot(\array{Sublist}{i}+1)}{P_n}}, \var{FirstDegree}+1}$
         \item \T $\var{Degree} \gets \var{FirstDegree} - \array{Work}{\var{Vertex}-1}$
         \item \T \xwhile $\var{WorkItems} > 0$ \xdo
         \item \T \T $u \gets \array{Input}{\var{Vertex}}$

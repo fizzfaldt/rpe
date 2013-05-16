@@ -10,19 +10,19 @@
     We have developed a multithreaded implementation of breadth-first
     search (BFS) of arbitrary graphs using the Cilk++ extensions to C++.
     We analyze our FBFS algorithm under the CILK model, where synchronizing
-    $n$ tasks takes $\Oh{\log n}$ time.  We introduce a lower bound for $T_p$ in
+    $n$ tasks takes $\Oh{\log n}$ time.  We introduce a lower bound for $T_P$ in
     level-synchronous BFS.
     FBFS achieves high work-efficiency by applying parallel prefix sum to split
     up all work at a given distance from a source vertex.
 
-    FBFS algorithm deterministically matches the lower bound for $T_p$,
+    FBFS algorithm deterministically matches the lower bound for $T_P$,
     and is asymptotically optimal for $T_1$.  PBFS saves energy by letting processors
-    become idle whenever possible: total non-idle work among all $p$ processors is $\Oh{T_1}$.
+    become idle whenever possible: total non-idle work among all $P$ processors is $\Oh{T_1}$.
     Our algorithm is non-deterministic in that it contains benign races which may affect
     performance (by up to a constant factor) but not its correctness.  These races can be
     fixed with mutual-exclusion locks which will slow down FBFS empirically.
 
     In particular, we show that for a graph $G=(V,E)$ with diameter $D$, FBFS runs
-    in time $\Oh{(\size{V}+\size{E})/p + D\log p}$ on $p$ processors, which means
-    that it attains near-perfect linear speedup if $p \ll (\size{V}+\size{E})/(D\log(\size{V}+\size{E}))$
+    in time $\Oh{(\size{V}+\size{E})/P + D\log P}$ on $P$ processors, which means
+    that it attains near-perfect linear speedup if $P \ll (\size{V}+\size{E})/(D\log(\size{V}+\size{E}))$
 \end{abstract}
