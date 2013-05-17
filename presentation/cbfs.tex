@@ -273,8 +273,11 @@
                             \item \T if $Dist_v = \infty$ then
                                 \comment{Benign race condition}
                             \item \T \T $Dist_v \gets Dist_u + 1$
+                                \comment{Maintains $Q_in$ invariant $2$}
                             \item \T \T $Owner_v \gets i$
-                            \item \T \T $\func{Enqueue}{Q_i, v}$
+                            \item \T \T if $\size{\Gamma(v)} > 0$
+                                \comment{Maintains $Q_in$ invariant $3$}
+                            \item \T \T \T $\func{Enqueue}{Q_i, v}$
                         \end{enumerate}
                 \end{enumerate}
         \end{enumerate}
@@ -311,7 +314,7 @@
                                         \end{enumerate}
                                 \end{enumerate}
                             \item Core $i$ searches for first degree in $OutDegree_{SubList_i}$ instead of $OutDegree$
-                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+DP\log p}$ to $\Oh{\size{\V}+\size{\E}+DP}$
+                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+Dp\log p}$ to $\Oh{\size{\V}+\size{\E}+Dp}$
                         \end{enumerate}
                     }
 
@@ -320,7 +323,7 @@
                             \item In ``Prepare to Split Work'', right after the parallel prefix sum, $p_\ell \gets \func{min}{m_\ell, p}$
                             \item Use at most $p_\ell$ cores until next time $m_\ell$ is calculated
                             \item This ensures the $\Oh{p_\ell}$ work every level is $\Oh{m_\ell}$
-                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+DP}$ to $\Oh{\size{\V}+\size{\E}+D}=\Oh{\size{\V}+\size{\E}}$ (optimal)
+                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+Dp}$ to $\Oh{\size{\V}+\size{\E}+D}=\Oh{\size{\V}+\size{\E}}$ (optimal)
 
                                 \bigskip
                                 \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{cpu.jpg}
@@ -334,7 +337,7 @@
                             \item BFS is a hot topic recently
                             \item BFS is used for
                                 \begin{itemize}
-                                    \item Path Finding 
+                                    \item Path Finding
                                         \begin{itemize}
                                             \item Video Games
                                             \item GPS
@@ -406,7 +409,7 @@
                                     \item \T $SubList_j \gets i$
                                 \end{enumerate}
                             \item Using $SubList_i$, core $i$ can search only $n_\ell/p$ indexes
-                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+DP\log p}$ to $\Oh{\size{\V}+\size{\E}+DP}$
+                            \item $W_p$ reduces from $\Oh{\size{\V}+\size{\E}+Dp\log p}$ to $\Oh{\size{\V}+\size{\E}+Dp}$
                         \end{enumerate}
                     }
 
