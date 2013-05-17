@@ -191,25 +191,6 @@
     \end{enumerate}
 }
 
-\disableframe{\frametitle{Terminology}
-    \begin{itemize}
-        \item $n= \size{\V}$ the number of nodes in a graph \maybepause
-        \item $m= \size{\E}$ the number of edges in a graph \maybepause
-        \item $D= \Oh{n}$ the diameter of a graph \maybepause
-        \item $\Gamma_u =$ the set of vertexes adjacent to $u$ \maybepause
-        \item $T_s =$ the running time for a serial algorithm \maybepause
-        \item $T_P =$ the running time for a parallel algorithm running on $P$ cores \maybepause
-        \item $T_\infty =$ the running time for a parallel algorithm running on infinite cores
-        \item $T_1 = \Om{T_s} =$ the running time for a parallel algorithm running on one core \maybepause
-        \item $W_P = \Om{T_s} =$ the total work done by a parallel algorithm running on $P$ cores (excluding idle time)
-            \begin{itemize}
-                \item Reducing $W_P$ can reduce energy use \cite{race-to-idle}
-            \end{itemize}
-            %TODO: motivation for W_P
-    \end{itemize}
-}
-
-
 %TODO: move/replace/delete this slide EDIT?
 \disableframe{\frametitle{Motivation for (P)BFS}
     BFS is used for
@@ -224,38 +205,6 @@
         \item Task scheduling
         \item As a primitive in other algorithms
         \item Hot topic recently
-    \end{itemize}
-}
-
-\disableframe{\frametitle{Existing Algorithms}
-    \begin{itemize}
-        \item MIT-bag \cite{mit-bag} uses penants, bags, and reducer hyperobjects \pause
-        \item block-queue-bfs \cite{block-queue-bfs} allocates space from FIFO in blocks \pause
-        \item distinguished-bfs \cite{distinguished-bfs} contracts the graph to make it dense \pause
-        \item cray-bfs \cite{cray-bfs} uses fast hardware mutexes and atomic increments
-    \end{itemize}
-}
-
-\disableframe{\frametitle{General Approaches}
-    \begin{itemize}
-        \item Assumes PRAM model \maybepause
-        \item Specialized for specific hardware \cite{blue-bfs}
-            \begin{itemize}
-                \item GPU
-                \item CRAY (hardware mutex every $64$ bits, atomic add) \maybepause
-                    \cite{cray-bfs}
-            \end{itemize}
-        \item Uses atomic instructions \cite{block-queue-bfs}
-        \item Specialized for sparse (or dense) graphs only
-        \item Specialized for bounded out-degree (not scale-free) \cite{mit-bag} \maybepause
-        \item $T_1$ or $T_p$ is not asymptotically optimal \maybepause
-        \item Room for energy efficiency improvements (non-optimal $W_P$) \maybepause
-        \item Offloads some work to scheduler
-            \begin{itemize}
-                \item Work-stealing (randomized) gives high probability bounds
-                    \cite{mit-bag}
-            \end{itemize}
-        \item Non level-synchronous \cite{distinguished-bfs}
     \end{itemize}
 }
 
