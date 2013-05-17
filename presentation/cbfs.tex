@@ -48,7 +48,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
 
 \begin{document}
-\title{Clean Breadth First Search}
+\title{A new optimal algorithm for parallel level synchronous BFS in the Cilk model}
 \author{Yonatan R. Fogel}
 \date{\today}
 
@@ -57,24 +57,142 @@
 %TODO: Maybe re-add table of contents
 %\frame{\frametitle{Table of contents}\tableofcontents}
 
-
 \section{Introduction}
-\frame{\frametitle{BFS Problem Description}
+\frame{\frametitle{BFS}
     \begin{itemize}
         \item Given
             \begin{itemize}
-                \item Graph $G=(\V,\E)$
+                \item Graph $G=(\V,\E)$ with diameter $D$
                 \item Source vertex $s \in \V$
             \end{itemize}
         \item Calculate
             \begin{itemize}
                 \item $Dist_{u\in \V} =$ length of the shortest path from $s$ to $u$ in $G$
-                \item $Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
+%                \item $Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
             \end{itemize}
+
+        \includegraphics[width=\textwidth,height=0.5\textheight,keepaspectratio]{bfs-1.png}
     \end{itemize}
 }
 
-\framedgraphic{BFS Example}{bfs-1.png}{1.0}
+\frame{\frametitle{Parallel BFS}
+    \begin{itemize}
+        \item The runtime for serial BFS is $T_s=\Th{\size{\V}+\size{\E}}$
+        \item For large graphs, calculating $Dist$ can be slow
+        \item We can speed up BFS by processing edges and/or nodes in parallel
+        \item Our new TBN-BFS achieves near-perfect linear speadup when $p \ll \frac{\size{V}+\size{E}}{D\log\left(\size{V}+\size{E}\right)}$
+
+            \bigskip
+            \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{6n-graf.png}
+    \end{itemize}
+}
+
+\frame{\frametitle{Level-Synchronous BFS}
+    \begin{itemize}
+        \item All nodes at distance $d$ from $s$ are processed before any nodes at distance $d^\prime > d$ \maybepause
+        \item Level-Synchronous BFS has lower bounds of
+            \begin{itemize}
+                \item $T_p = \Om{\frac{\size{\V}+\size{\E}}{p}+D}$
+                \item $T_1,W_p = \Om{T_s} = \Om{\size{\V}+\size{\E}}$
+            \end{itemize}
+        \item Non Level-Synchronous BFS algorithms
+            \begin{itemize}
+                \item Distinguished-BFS \cite{distinguished-bfs}
+            \end{itemize}
+
+        \bigskip
+        \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{6n-graf.png}
+    \end{itemize}
+}
+
+\frame{\frametitle{Cilk Model}
+    \begin{itemize}
+        \item Large shared memory
+        \item Consistent caches between cores
+        \item Synchronizing (or launching) $n$ tasks takes $T_\infty=\Th{\log n}$ time
+        \item Cilk+ has this model with the addition of randomized work stealing \cite{cilk}
+        \item BFS algorithms not using the Cilk Model
+            \begin{itemize}
+                \item Cray-BFS uses the Cray MTA-2 hardware model \cite{cray-bfs}
+                \item Block-Queue-BFS uses the Intel Mic model \cite{block-queue-bfs}
+            \end{itemize}
+
+            \bigskip
+            \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{FullBinary.png}
+    \end{itemize}
+}
+
+\frame{\frametitle{Level-Synchronous Parallel BFS in the Cilk Model}
+    \begin{itemize}
+        \item In the Cilk Model, Level-Synchronous BFS has a lower bound of $T_p = \Om{\frac{\size{\V}+\size{\E}}{p}+D\log p}$
+        \item MIT-Bag-BFS uses penants, bags, and reducer hyperobjects \cite{mit-bag}
+        \item Our new TBN-BFS algorithm
+            \begin{itemize}
+                \item Achieves the lower bound for $T_p, T_1, W_p$ in the worst case
+                \item Is scale-free
+                \item Can be implemented using Cilk+
+                \item Can do its own scheduling deterministically
+            \end{itemize}
+
+            \bigskip
+            \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{jet-engine.jpg}
+    \end{itemize}
+}
+%TODO ref MIT Cilk and/or Intel Cilk+
+
+\frame{\frametitle{Serial-BFS}
+    \begin{enumerate}
+        \item for each vertex $u \in \V$
+        \item \T $Dist_u \gets \infty$
+        \item $Dist_s \gets 0$
+        \item $Q \gets \emptyset$
+        \item $\func{Enqueue}{Q, ~s}$
+        \item while $Q \neq \emptyset$ do
+        \item \T $u \gets \func{Dequeue}{Q}$
+        \item \T for each vertex $v$ in $\Gamma(u)$ do
+        \item \T \T if $Dist_v = \infty$ then
+        \item \T \T \T $Dist_v \gets Dist_u + 1$
+        \item \T \T \T $\func{Enqueue}{Q, v}$
+    \end{enumerate}
+}
+
+
+\iffalse
+optimal means:
+
+$T_1 and T_P and W_P$ are asymptotically optimal. <- needs lower bound (parallel+level sync+cilk)
+$T_P$ is something.
+$T_1$ is something.
+This is near perfect linear speedup when m is some function of blah and blah.
+
+Next level:
+The BSF algorithm runs on standard hardware and can be implemented using a multithreaded language such as Cilk or it can do its own scheduling.
+
+Next level:
+It's deterministically schedulable.
+
+This algorithm is scale free, which means that Delta is the max degree of the graph and it doesn't require Delta to be bounded and Delta does not appear in any of the running times.
+
+
+\fi
+
+%TODO:
+%TODO: What is parallel BFS?
+
+%TODO: What is level synchronous BFS?
+%      Quick comment about non-level synchronous BFS
+
+%TODO: What is Cilk Model
+%      Comment about algos in other models
+%           PRAM, just timing, GPU, etc..
+%
+%       Lower bound in CILK model for level sync bfs
+
+
+%       
+%   Did BFS
+%   Next?  Parallel or level synchronous?
+
 
 \frame{\frametitle{Terminology}
     \begin{itemize}
@@ -94,30 +212,6 @@
     \end{itemize}
 }
 
-\frame{\frametitle{Serial-BFS}
-    \begin{enumerate}
-        \item for each vertex $u \in \V$
-        \item \T $Dist_u \gets \infty$
-        \item $Dist_s \gets 0$
-        \item $Q \gets \emptyset$
-        \item $\func{Enqueue}{Q, ~s}$
-        \item while $Q \neq \emptyset$ do
-        \item \T $u \gets \func{Dequeue}{Q}$
-        \item \T for each vertex $v$ in $\Gamma(u)$ do
-        \item \T \T if $Dist_v = \infty$ then
-        \item \T \T \T $Dist_v \gets Dist_u + 1$
-        \item \T \T \T $\func{Enqueue}{Q, v}$
-    \end{enumerate}
-}
-
-\frame{\frametitle{Computation Model}
-    \begin{itemize}
-        \item Large shared memory
-        \item Consistent caches between cores
-        \item Synchronizing $y$ tasks takes $T_\infty=\Th{\log y}$ time
-        \item Cilk has this model with randomized work stealing \cite{cilk}
-    \end{itemize}
-}
 
 \frame{\frametitle{Motivation for (P)BFS}
     BFS is used for
@@ -168,21 +262,6 @@
                     \cite{mit-bag}
             \end{itemize}
         \item Non level-synchronous \cite{distinguished-bfs}
-    \end{itemize}
-}
-
-\frame{\frametitle{Level-Synchronous BFS}
-    \begin{itemize}
-        \item All nodes at distance $d$ from $s$ are processed before any nodes at distance $d^\prime > d$ \maybepause
-        \item $T_P = \Om{n/p+m/p+D\log P}$ \maybepause
-            \begin{itemize}
-                \item $T_p = \Om{T_s/P} = \Om{n/p+m/p}$ \maybepause
-                \item Let $n_\ell, m_\ell$ be the number of nodes and edges visited at level $\ell$ \maybepause
-                \item Consider a graph where $\forall_{0<\ell\leq D}n_\ell+m_\ell=\Th{P}$
-                \item Every level has $\Th{P}$ work and uses $P_\ell \leq P$ cores
-                \item For each level, $T_p = \Om{P/P_\ell + \log P_\ell} = \Om{\log P}$ time
-            \end{itemize}
-            %TODO: improve description of problem
     \end{itemize}
 }
 
