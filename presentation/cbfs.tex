@@ -170,7 +170,6 @@
 }
 
 
-%TODO: add red right justified comments about what to parallelize
 \frame{\frametitle{Serial-BFS}
     \begin{enumerate}
         \item for each vertex $u \in \V$
@@ -191,9 +190,10 @@
     \end{enumerate}
 }
 
-%TODO: move/replace/delete this slide EDIT?
+%TODO: Maybe restore this slide (requires edits).  Will probably also require being MOVED ELSEWHERE
+%TODO: If I do this, specify what hot topic means (estimate of papers in what conferences over what years)
 \disableframe{\frametitle{Motivation for (P)BFS}
-    BFS is used for
+    BFS is a hot topic recently and is used for
     \begin{itemize}
         \item Path Finding 
             \begin{itemize}
@@ -204,7 +204,6 @@
         \item Designing and analyzing VLSI
         \item Task scheduling
         \item As a primitive in other algorithms
-        \item Hot topic recently
     \end{itemize}
 }
 
@@ -215,13 +214,12 @@
     \end{itemize}
 }
 
-%TODO: Summarize results before description AND in conclusion Rewrite not using n,m
 \section{TBN-BFS}
 \frame{\frametitle{TBN-BFS - Summary}
     \begin{itemize}
-        \item $T_1 = \Oh{n+m}$ (optimal)
-        \item $W_p = \Oh{n+m}$ (optimal)
-        \item $T_p = \Oh{n/p+m/p+D\log p}$ (optimal)
+        \item $T_1 = \Oh{\size{\V}+\size{\E}}$ (optimal)
+        \item $W_p = \Oh{\size{\V}+\size{\E}}$ (optimal)
+        \item $T_p = \Oh{\frac{\size{\V}+\size{\E}}{p}+D\log p}$ (optimal)
         \item Scale-free
         \item Runs on standard hardware implemented using Cilk+
         \item Can do its own scheduling deterministically
@@ -277,6 +275,7 @@
                 \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{banana.jpg}
     }
 
+    %TODO: Maybe add a picture? (WHAT?)
     \frame{\frametitle{TBN-BFS - Split Work and Process Edges}
         \begin{enumerate}
             \item Each core $i$ in parallel
@@ -314,6 +313,7 @@
         \end{enumerate}
     }
 
+    %TODO: this is the worst slide!!!
     \frame{\frametitle{TBN-BFS - Reduce Search Space}
         \begin{enumerate}
             \item $N \gets \size{OutDegrees}$
@@ -343,13 +343,14 @@
         \end{itemize}
     }
 
-    \frame{\frametitle{Summary}
+    %TODO: Conclusion is just ~copy of summary and badly named?
+    \frame{\frametitle{Conclusion}
         \begin{itemize}
             \item Our new TBN-BFS algorithm
                 \begin{itemize}
-                    \item $T_1 = \Oh{n+m}$ (optimal)
-                    \item $W_p = \Oh{n+m}$ (optimal)
-                    \item $T_p = \Oh{n/p+m/p+D\log p}$ (optimal)
+                    \item $T_1 = \Oh{\size{\V}+\size{\E}}$ (optimal)
+                    \item $W_p = \Oh{\size{\V}+\size{\E}}$ (optimal)
+                    \item $T_p = \Oh{\frac{\size{\V}+\size{\E}}{p}+D\log p}$ (optimal)
                     \item Scale-free
                     \item Runs on standard hardware implemented using Cilk+
                     \item Can do its own scheduling deterministically
@@ -378,18 +379,6 @@
             \item Run experiments comparing TBN-BFS to existing algorithms
         \end{itemize}
     }
-
-    \iffalse
-\item Combined over all levels
-    \begin{itemize}
-        \item $T_p = \Oh{n/p + m/p + D\log p}$
-        \item $T_1 = \Oh{n+m}$
-        \item $W_p = \Oh{n+m+DP\log p}$\maybepause
-    \end{itemize}
-\item 
-    \fi
-
-
 
     \begin{frame}[allowframebreaks]
         \frametitle{References}
