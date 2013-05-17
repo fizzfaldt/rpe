@@ -62,7 +62,7 @@
     \begin{itemize}
         \item Given
             \begin{itemize}
-                \item Graph $G=(\V,\E)$ with diameter $D$
+                \item Graph $G=(\V,\E)$ with diameter $D$ and max out-degree $\Delta$
                 \item Source vertex $s \in \V$
             \end{itemize}
         \item Calculate
@@ -126,19 +126,18 @@
     \begin{itemize}
         \item In the Cilk Model, Level-Synchronous BFS has a lower bound of $T_p = \Om{\frac{\size{\V}+\size{\E}}{p}+D\log p}$
         \item MIT-Bag-BFS uses penants, bags, and reducer hyperobjects \cite{mit-bag}
-        \item Our new TBN-BFS algorithm
+        \item TBN-BFS algorithm
             \begin{itemize}
-                \item Achieves the lower bound for $T_p, T_1, W_p$ in the worst case
-                \item Is scale-free
-                \item Can be implemented using Cilk+
+                \item Runs on standard hardware implemented using Cilk+
                 \item Can do its own scheduling deterministically
+                \item Achieves the lower bound for $T_p, T_1, W_p$ in the worst case independently of $\Delta$ (scale-free)
             \end{itemize}
 
             \bigskip
             \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{jet-engine.jpg}
     \end{itemize}
 }
-%TODO ref MIT Cilk and/or Intel Cilk+
+
 
 \frame{\frametitle{Serial-BFS}
     \begin{enumerate}
