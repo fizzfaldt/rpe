@@ -28,7 +28,7 @@
 }
 \newcommand{\disableframe}[1]{}
 
-\def\func#1#2{\mbox{\textrm{\bf{\sc{#1}}}}\ensuremath{(~{#2}~)}}
+\def\func#1#2{\mbox{\textrm{\bf{\sc{#1}}}}\ensuremath{({#2})}}
 % pseudocode notations
 \newcommand{\T}{\mbox{\hspace{0.5cm}}}
 
@@ -44,11 +44,12 @@
     \pause
     \fi
 }
-
-\def\comment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
-\def\lcomment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
-\def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
-\def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
+\definecolor{light-gray}{gray}{0.35}
+\definecolor{orange}{cmyk}{0,0.5,1,0}
+\def\comment#1{\hfill{\color{light-gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
+\def\lcomment#1{\hfill{\color{light-gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
+\def\rcomment#1{\hfill{\color{light-gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
+\def\fcomment#1{\hfill{\color{light-gray}{$\textrm{{\em{#1}}}$}}}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
@@ -167,8 +168,7 @@
         \item \T $Dist_u \gets \infty$
         \item $Dist_s \gets 0$
         \item $Q \gets \emptyset$
-        \item $\func{Enqueue}{Q, ~s}$
-            \comment{SOUP}
+        \item $\func{Enqueue}{Q, s}$
         \item while $Q \neq \emptyset$ do
         \item \T $u \gets \func{Dequeue}{Q}$
         \item \T for each vertex $v$ in $\Gamma(u)$ do
@@ -178,45 +178,7 @@
     \end{enumerate}
 }
 
-
-\iffalse
-optimal means:
-
-$T_1 and T_P and W_P$ are asymptotically optimal. <- needs lower bound (parallel+level sync+cilk)
-$T_P$ is something.
-$T_1$ is something.
-This is near perfect linear speedup when m is some function of blah and blah.
-
-Next level:
-The BSF algorithm runs on standard hardware and can be implemented using a multithreaded language such as Cilk or it can do its own scheduling.
-
-Next level:
-It's deterministically schedulable.
-
-This algorithm is scale free, which means that Delta is the max degree of the graph and it doesn't require Delta to be bounded and Delta does not appear in any of the running times.
-
-
-\fi
-
-%TODO:
-%TODO: What is parallel BFS?
-
-%TODO: What is level synchronous BFS?
-%      Quick comment about non-level synchronous BFS
-
-%TODO: What is Cilk Model
-%      Comment about algos in other models
-%           PRAM, just timing, GPU, etc..
-%
-%       Lower bound in CILK model for level sync bfs
-
-
-%       
-%   Did BFS
-%   Next?  Parallel or level synchronous?
-
-
-\frame{\frametitle{Terminology}
+\disableframe{\frametitle{Terminology}
     \begin{itemize}
         \item $n= \size{\V}$ the number of nodes in a graph \maybepause
         \item $m= \size{\E}$ the number of edges in a graph \maybepause
@@ -241,6 +203,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
         \item Path Finding 
             \begin{itemize}
                 \item Video Games
+                \item GPS
             \end{itemize}
         \item Analyzing social networks
         \item Designing and analyzing VLSI
@@ -250,12 +213,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
     \end{itemize}
 }
 
-\disableframe{\frametitle{Motivation for PBFS}
-    BFS can achieve significant speedup for practical graphs
-    %TODO: maybe delete this slide?  Or add more
-}
-
-\frame{\frametitle{Existing Algorithms}
+\disableframe{\frametitle{Existing Algorithms}
     \begin{itemize}
         \item MIT-bag \cite{mit-bag} uses penants, bags, and reducer hyperobjects \pause
         \item block-queue-bfs \cite{block-queue-bfs} allocates space from FIFO in blocks \pause
@@ -264,7 +222,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
     \end{itemize}
 }
 
-\frame{\frametitle{General Approaches}
+\disableframe{\frametitle{General Approaches}
     \begin{itemize}
         \item Assumes PRAM model \maybepause
         \item Specialized for specific hardware \cite{blue-bfs}
