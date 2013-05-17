@@ -179,11 +179,15 @@
         \item $Q \gets \emptyset$
         \item $\func{Enqueue}{Q, s}$
         \item while $Q \neq \emptyset$ do
-        \item \T $u \gets \func{Dequeue}{Q}$
-        \item \T for each vertex $v$ in $\Gamma(u)$ do
-        \item \T \T if $Dist_v = \infty$ then
+        \item \T $u \gets \func{Dequeue}{Q}$\label{par1}
+            \lcomment{Potential source of\qquad}
+        \item \T for each vertex $v$ in $\Gamma(u)$ do\label{par2}
+        \rcomment{parallelism: lines \ref{par1}--\ref{par2}}
+    \item \T \T if $Dist_v = \infty$ then\label{issue1}
+            \lcomment{Potential issues for\qquad}
         \item \T \T \T $Dist_v \gets Dist_u + 1$
-        \item \T \T \T $\func{Enqueue}{Q, v}$
+            \rcomment{parallelism: lines \ref{issue1}--\ref{issue2}}
+        \item \T \T \T $\func{Enqueue}{Q, v}$\label{issue2}
     \end{enumerate}
 }
 
@@ -206,7 +210,8 @@
 }
 
 
-\frame{\frametitle{Motivation for (P)BFS}
+%TODO: move/replace/delete this slide EDIT?
+\disableframe{\frametitle{Motivation for (P)BFS}
     BFS is used for
     \begin{itemize}
         \item Path Finding 
@@ -263,14 +268,14 @@
 
 %TODO: Summarize results before description AND in conclusion Rewrite not using n,m
 \section{TBN-BFS}
-\frame{\frametitle{TBN-BFS - Properties}
+\frame{\frametitle{TBN-BFS - Summary}
     \begin{itemize}
-        \item Recall $T_s = \Oh{n+m}$
         \item $T_1 = \Oh{n+m}$ (optimal)
         \item $W_P = \Oh{n+m}$ (optimal)
         \item $T_P = \Oh{n/p+m/p+D\log P}$ (optimal)
         \item Scale-free
-        \item Deterministic worst case bounds
+        \item Runs on standard hardware implemented using Cilk+
+        \item Can do its own scheduling deterministically
     \end{itemize}
 }
 
