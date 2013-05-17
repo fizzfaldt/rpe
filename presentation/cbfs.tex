@@ -54,9 +54,19 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
 
+\setbeamertemplate{footline}[text line]{%
+    \parbox{\linewidth}{
+        \vspace*{-8pt}
+        \hspace*{-20pt}
+        \insertshorttitle
+        \hfill
+        \insertpagenumber
+    }
+}
 \begin{document}
-\title{A new optimal algorithm for Level-Synchronous Parallel BFS in the Cilk model}
+\title[A new optimal algorithm for Level-Synchronous Parallel BFS in the Cilk model]{A new optimal algorithm for Level-Synchronous Parallel BFS in the Cilk model}
 \author{Yonatan R. Fogel}
+\institute{Stony Brook University}
 \date{\today}
 
 \frame{\titlepage}
@@ -75,7 +85,6 @@
         \item Calculate
             \begin{itemize}
                 \item $Dist_{u\in \V} =$ length of the shortest path from $s$ to $u$ in $G$
-%                \item $Parent_{u\in \V} = v \in \V$ s.t. $(v, u) \in \E, Dist_u = Dist_v + 1$
             \end{itemize}
 
         \includegraphics[width=\textwidth,height=0.5\textheight,keepaspectratio]{bfs-1.png}
@@ -253,8 +262,8 @@
 }
 
 %TODO: Summarize results before description AND in conclusion Rewrite not using n,m
-\section{Clean BFS}
-\frame{\frametitle{Clean BFS - Properties}
+\section{TBN-BFS}
+\frame{\frametitle{TBN-BFS - Properties}
     \begin{itemize}
         \item Recall $T_s = \Oh{n+m}$
         \item $T_1 = \Oh{n+m}$ (optimal)
@@ -266,7 +275,7 @@
 }
 
 %TODO: no capital in middle (Prepare to Split Work)
-\frame{\frametitle{Clean BFS - High Level}
+\frame{\frametitle{TBN-BFS - High Level}
     For each level $\ell \in [0\ldots D)$
     \begin{enumerate}
         \item To get optimal $T_1,T_P$
@@ -284,13 +293,13 @@
 }
 
 \subsection{Algorithm}
-\frame{\frametitle{Clean BFS - Prepare to Split Work}
+\frame{\frametitle{TBN-BFS - Prepare to Split Work}
     \begin{enumerate}
         \item One input queue $Q_{in}\subseteq \V$
             \begin{enumerate}
                 \item Each vertex in $Q_{in}$ is unique
-                \item $\forall u (u \in Q_{in} \Rightarrow Dist_u = \ell)$
-                \item $\forall u (u \in Q_{in} \Rightarrow \size{\Gamma_u} > 0$
+                \item $\forall u \in Q_{in} : Dist_u = \ell$
+                \item $\forall u \in Q_{in} : \size{\Gamma_u} > 0$
             \end{enumerate}
         \item Generate $OutDegrees[0\leq i<\size{Q_{in}}] = \size{\Gamma(Q_{in}[i])}$ in parallel
         \item Perform a parallel prefix sum on $OutDegrees$
@@ -303,7 +312,7 @@
     \end{enumerate}
 }
 
-\frame{\frametitle{Clean BFS - Split Work and Process Edges}
+\frame{\frametitle{TBN-BFS - Split Work and Process Edges}
     \begin{enumerate}
         \item Each core $i$ processes $m_\ell/P$ edges
             \begin{enumerate}
@@ -323,7 +332,7 @@
     \end{enumerate}
 }
 
-\frame{\frametitle{Clean BFS - Dedup Vertexes and Combine Queues}
+\frame{\frametitle{TBN-BFS - Dedup Vertexes and Combine Queues}
     \begin{enumerate}
         \item $Size_{-1} = 0$
         \item Each core $i$ uses $Owner$ to ensure each vertex lives in at most one output queue
@@ -336,7 +345,7 @@
     \end{enumerate}
 }
 
-\frame{\frametitle{Clean BFS - Reduce Search Space}
+\frame{\frametitle{TBN-BFS - Reduce Search Space}
     \begin{enumerate}
         \item $N \gets \size{OutDegrees}$
         \item Each core $i$
@@ -353,7 +362,7 @@
     \end{enumerate}
 }
 
-\frame{\frametitle{Clean BFS - Dynamically Choose Number of Cores}
+\frame{\frametitle{TBN-BFS - Dynamically Choose Number of Cores}
     \begin{itemize}
         \item In ``Prepare to Split Work'', right after the parallel prefix sum, $P_\ell \gets \func{min}{m_\ell, P}$
         \item Use at most $P_\ell$ cores until next time $m_\ell$ is calculated
@@ -364,19 +373,19 @@
 
 \frame{\frametitle{Conclusions}
     \begin{itemize}
-        \item Clean BFS has optimal $T_1, T_P, W_P$ in our computation model
+        \item TBN-BFS has optimal $T_1, T_P, W_P$ in our computation model
         \item TODO MORE?
     \end{itemize}
 }
 
 \frame{\frametitle{Future Work}
     \begin{itemize}
-        \item Optimize Clean BFS for the PRAM model
+        \item Optimize TBN-BFS for the PRAM model
             \begin{itemize}
-                \item Clean BFS runs in same time for PRAM but is not asymptotically optimal
+                \item TBN-BFS runs in same time for PRAM but is not asymptotically optimal
                 \item Try using approximate parallel prefix sum \cite{Goldberg95optimaldeterministic}
             \end{itemize}
-        \item Modify Clean BFS to remove false sharing
+        \item Modify TBN-BFS to remove false sharing
             \begin{itemize}
                 \item Examine using an $\Oh{n}$ sort algorithm for levels where $m_\ell = \Omega{n^\frac{1}{c}}$
                 \item Try to distribute work by cacheline
