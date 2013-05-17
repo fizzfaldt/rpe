@@ -45,10 +45,16 @@
     \fi
 }
 
+\def\comment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
+\def\lcomment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
+\def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
+\def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%MACROS
 
 \begin{document}
-\title{A new optimal algorithm for parallel level synchronous BFS in the Cilk model}
+\title{A new optimal algorithm for Level-Synchronous Parallel BFS in the Cilk model}
 \author{Yonatan R. Fogel}
 \date{\today}
 
@@ -111,10 +117,11 @@
         \item Consistent caches between cores
         \item Synchronizing (or launching) $n$ tasks takes $T_\infty=\Th{\log n}$ time
         \item Cilk+ has this model with the addition of randomized work stealing \cite{cilk}
-        \item BFS algorithms not using the Cilk Model
+        \item A parallel algorithm has the following properties
             \begin{itemize}
-                \item Cray-BFS uses the Cray MTA-2 hardware model \cite{cray-bfs}
-                \item Block-Queue-BFS uses the Intel Mic model \cite{block-queue-bfs}
+                \item $T_p =$ running time using $p$ cores
+                \item $T_1 =$ running time using $1$ core
+                \item $W_p =$ work done using $p$ cores
             \end{itemize}
 
             \bigskip
@@ -122,11 +129,25 @@
     \end{itemize}
 }
 
+\frame{\frametitle{Non Cilk Model}
+    \begin{itemize}
+        \item Level Synchronous BFS algorithms not using the Cilk Model
+            \begin{itemize}
+                \item Cray-BFS uses the Cray MTA-2 hardware model \cite{cray-bfs}
+                \item Block-Queue-BFS uses the Intel Mic hardware model \cite{block-queue-bfs}
+                \item Blue-BFS uses the BlueGene/L hardware model \cite{blue-bfs}
+            \end{itemize}
+
+            \bigskip
+            \includegraphics[width=\textwidth,height=0.25\textheight,keepaspectratio]{cray.jpg}
+    \end{itemize}
+}
+
 \frame{\frametitle{Level-Synchronous Parallel BFS in the Cilk Model}
     \begin{itemize}
         \item In the Cilk Model, Level-Synchronous BFS has a lower bound of $T_p = \Om{\frac{\size{\V}+\size{\E}}{p}+D\log p}$
         \item MIT-Bag-BFS uses penants, bags, and reducer hyperobjects \cite{mit-bag}
-        \item TBN-BFS algorithm
+        \item Our new TBN-BFS algorithm
             \begin{itemize}
                 \item Runs on standard hardware implemented using Cilk+
                 \item Can do its own scheduling deterministically
@@ -139,6 +160,7 @@
 }
 
 
+%TODO: add red right justified comments about what to parallelize
 \frame{\frametitle{Serial-BFS}
     \begin{enumerate}
         \item for each vertex $u \in \V$
@@ -146,6 +168,7 @@
         \item $Dist_s \gets 0$
         \item $Q \gets \emptyset$
         \item $\func{Enqueue}{Q, ~s}$
+            \comment{SOUP}
         \item while $Q \neq \emptyset$ do
         \item \T $u \gets \func{Dequeue}{Q}$
         \item \T for each vertex $v$ in $\Gamma(u)$ do
@@ -218,12 +241,12 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
         \item Path Finding 
             \begin{itemize}
                 \item Video Games
-                \item Google Maps\maybepause
             \end{itemize}
-        \item Analyzing social networks \maybepause %TODO: ref
-        \item Designing and analyzing VLSI \maybepause %TODO: ref
-        \item Task scheduling \maybepause %TODO: ref
+        \item Analyzing social networks
+        \item Designing and analyzing VLSI
+        \item Task scheduling
         \item As a primitive in other algorithms
+        \item Hot topic recently
     \end{itemize}
 }
 
@@ -271,6 +294,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
     \end{itemize}
 }
 
+%TODO: Summarize results before description AND in conclusion Rewrite not using n,m
 \section{Clean BFS}
 \frame{\frametitle{Clean BFS - Properties}
     \begin{itemize}
@@ -283,6 +307,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
     \end{itemize}
 }
 
+%TODO: no capital in middle (Prepare to Split Work)
 \frame{\frametitle{Clean BFS - High Level}
     For each level $\ell \in [0\ldots D)$
     \begin{enumerate}
@@ -399,6 +424,7 @@ This algorithm is scale free, which means that Delta is the max degree of the gr
                 \item Try to distribute work by cacheline
             \end{itemize}
         \item Examine non level-synchronous approaches
+        \item Implement, optimize, and compare to existing algorithms
     \end{itemize}
 }
 
